@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Music, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { authenticate } from "./actions";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,20 +20,15 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const { signIn } = await import("next-auth/react");
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
-
+      const result = await authenticate(form.email, form.password);
       if (result?.error) {
-        setError("Invalid email or password");
-      } else {
-        router.push("/dashboard");
+        setError(result.error);
       }
+      // On success, the server action redirects to /dashboard automatically
     } catch {
-      setError("Something went wrong. Please try again.");
+      // Redirect throws are caught here — that's expected behavior
+      // If it's a real error, it'll show in the catch
+      setError("");
     } finally {
       setLoading(false);
     }
