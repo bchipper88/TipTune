@@ -45,8 +45,14 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16">
+      {/* Hero Banner Section */}
+      <section
+        className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16"
+        style={{ backgroundImage: "url(/banner.jpg)", backgroundSize: "cover", backgroundPosition: "center 30%" }}
+      >
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/80 via-dark-bg/70 to-dark-bg" />
+        {/* Atmospheric light effects */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-secondary/10 blur-3xl" />
