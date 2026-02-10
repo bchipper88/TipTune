@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   Music,
@@ -45,55 +46,66 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Banner Section */}
-      <section
-        className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16"
-        style={{ backgroundImage: "url(/banner.png)", backgroundSize: "cover", backgroundPosition: "center 30%" }}
-      >
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/80 via-dark-bg/70 to-dark-bg" />
-        {/* Atmospheric light effects */}
+      {/* Hero Section */}
+      <section className="relative overflow-hidden px-4 pb-16 pt-32 sm:pt-36">
+        {/* Subtle background accents */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-secondary/10 blur-3xl" />
-          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-warm/10 blur-3xl" />
+          <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-warm/5 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card-bg/50 px-4 py-1.5 text-sm text-muted">
-            <Zap className="h-3.5 w-3.5 text-warm" />
-            Live song requests powered by tips
+        <div className="relative z-10 mx-auto max-w-6xl">
+          {/* Text Content */}
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card-bg/50 px-4 py-1.5 text-sm text-muted">
+              <Zap className="h-3.5 w-3.5 text-warm" />
+              Live song requests powered by tips
+            </div>
+
+            <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              Your tip decides{" "}
+              <span className="gradient-text">what plays next</span>
+            </h1>
+
+            <p className="mx-auto mb-10 max-w-2xl text-lg text-muted sm:text-xl">
+              The live music request platform where audiences compete to hear
+              their favorite song. Tip to boost your request up the queue —
+              the highest bid plays next.
+            </p>
+
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <Link href="/register">
+                <Button variant="warm" size="lg" className="gap-2 text-base">
+                  <Mic2 className="h-5 w-5" />
+                  I&apos;m an Artist
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/explore">
+                <Button variant="ghost" size="lg" className="gap-2 text-base">
+                  <Smartphone className="h-5 w-5" />
+                  Find an Event
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-            Your tip decides{" "}
-            <span className="gradient-text">what plays next</span>
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-2xl text-lg text-muted sm:text-xl">
-            The live music request platform where audiences compete to hear their
-            favorite song. Tip to boost your request up the queue — the highest
-            bid plays next.
-          </p>
-
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/register">
-              <Button variant="warm" size="lg" className="gap-2 text-base">
-                <Mic2 className="h-5 w-5" />
-                I&apos;m an Artist
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/explore">
-              <Button variant="ghost" size="lg" className="gap-2 text-base">
-                <Smartphone className="h-5 w-5" />
-                Find an Event
-              </Button>
-            </Link>
+          {/* Banner Image */}
+          <div className="mx-auto mt-14 max-w-4xl">
+            <div className="overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
+              <Image
+                src="/banner.png"
+                alt="Live band performing on stage"
+                width={1920}
+                height={1080}
+                className="h-auto w-full object-cover"
+                priority
+              />
+            </div>
           </div>
 
           {/* Mock Queue Preview */}
-          <div className="mx-auto mt-16 max-w-md">
+          <div className="mx-auto mt-14 max-w-md">
             <div className="rounded-2xl border border-border bg-card-bg/80 p-4 backdrop-blur-sm">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
                 Live Queue Preview

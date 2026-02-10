@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-dark-bg: #1A1630;
-  --color-card-bg: #241F3F;
+  --color-dark-bg: #0F1117;
+  --color-card-bg: #1A1B26;
   --color-primary: #3B6CFF;
   --color-secondary: #6C4DFF;
   --color-warm: #D47A3C;
@@ -10,8 +10,8 @@
   --color-muted: #8C8AA6;
   --color-success: #34D399;
   --color-danger: #EF4444;
-  --color-card-hover: #2D2750;
-  --color-border: #352F56;
+  --color-card-hover: #242530;
+  --color-border: #2D2E3A;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
@@ -45,9 +45,9 @@ body {
 
 /* Glassmorphism utility */
 .glass {
-  background: rgba(36, 31, 63, 0.7);
+  background: rgba(26, 27, 38, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(53, 47, 86, 0.5);
+  border: 1px solid rgba(45, 46, 58, 0.5);
 }
 
 /* Glow effects */
