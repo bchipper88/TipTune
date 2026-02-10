@@ -90,86 +90,87 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Banner Image */}
-          <div className="mx-auto mt-14 max-w-4xl">
-            <div className="overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
-              <Image
-                src="/banner.png"
-                alt="Live band performing on stage"
-                width={1920}
-                height={1080}
-                className="h-auto w-full object-cover"
-                priority
-              />
-            </div>
-          </div>
+          {/* Banner Image + Queue Preview side by side */}
+          <div className="mx-auto mt-14 max-w-5xl">
+            <div className="grid items-stretch gap-6 lg:grid-cols-[1fr_340px]">
+              {/* Banner Image */}
+              <div className="overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
+                <Image
+                  src="/banner.png"
+                  alt="Live band performing on stage"
+                  width={1920}
+                  height={1080}
+                  className="h-full w-full object-cover"
+                  priority
+                />
+              </div>
 
-          {/* Mock Queue Preview */}
-          <div className="mx-auto mt-14 max-w-md">
-            <div className="rounded-2xl border border-border bg-card-bg/80 p-4 backdrop-blur-sm">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-                Live Queue Preview
-              </p>
+              {/* Mock Queue Preview */}
+              <div className="rounded-2xl border border-border bg-card-bg/80 p-4 backdrop-blur-sm">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                  Live Queue Preview
+                </p>
 
-              {/* Next Up */}
-              <div className="next-up-glow mb-3 rounded-xl border border-warm/30 bg-warm/10 p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warm/20">
-                      <Music className="h-5 w-5 text-warm" />
+                {/* Next Up */}
+                <div className="next-up-glow mb-3 rounded-xl border border-warm/30 bg-warm/10 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warm/20">
+                        <Music className="h-5 w-5 text-warm" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-semibold uppercase text-warm">
+                          Next Up
+                        </p>
+                        <p className="font-semibold text-text-white">
+                          Don&apos;t Stop Believin&apos;
+                        </p>
+                        <p className="text-xs text-muted">Journey</p>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <p className="text-xs font-semibold uppercase text-warm">
-                        Next Up
-                      </p>
-                      <p className="font-semibold text-text-white">
-                        Don&apos;t Stop Believin&apos;
-                      </p>
-                      <p className="text-xs text-muted">Journey</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-lg font-bold text-warm">$47</p>
-                    <div className="flex items-center gap-1 text-xs text-success">
-                      <ChevronUp className="h-3 w-3" />
-                      +$5
+                    <div className="text-right">
+                      <p className="font-mono text-lg font-bold text-warm">$47</p>
+                      <div className="flex items-center gap-1 text-xs text-success">
+                        <ChevronUp className="h-3 w-3" />
+                        +$5
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Queue items */}
-              <div className="space-y-2">
-                {[
-                  { song: "Sweet Caroline", artist: "Neil Diamond", amount: "$32" },
-                  { song: "Piano Man", artist: "Billy Joel", amount: "$28" },
-                  { song: "Bohemian Rhapsody", artist: "Queen", amount: "$15" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between rounded-lg border border-border/50 bg-dark-bg/50 p-2.5 opacity-60"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-card-bg">
-                        <Music className="h-4 w-4 text-muted" />
+                {/* Queue items */}
+                <div className="space-y-2">
+                  {[
+                    { song: "Sweet Caroline", artist: "Neil Diamond", amount: "$32" },
+                    { song: "Piano Man", artist: "Billy Joel", amount: "$28" },
+                    { song: "Bohemian Rhapsody", artist: "Queen", amount: "$15" },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-lg border border-border/50 bg-dark-bg/50 p-2.5 opacity-60"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-card-bg">
+                          <Music className="h-4 w-4 text-muted" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-text-white">
+                            {item.song}
+                          </p>
+                          <p className="text-xs text-muted">{item.artist}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-text-white">
-                          {item.song}
-                        </p>
-                        <p className="text-xs text-muted">{item.artist}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-semibold text-muted">
+                          {item.amount}
+                        </span>
+                        <button className="rounded-lg bg-primary/20 px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/30">
+                          Boost
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-muted">
-                        {item.amount}
-                      </span>
-                      <button className="rounded-lg bg-primary/20 px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/30">
-                        Boost
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
