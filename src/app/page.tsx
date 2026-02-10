@@ -48,7 +48,7 @@ export default function LandingPage() {
       {/* Hero Banner Section */}
       <section
         className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16"
-        style={{ backgroundImage: "url(/banner.jpg)", backgroundSize: "cover", backgroundPosition: "center 30%" }}
+        style={{ backgroundImage: "url(/banner.png)", backgroundSize: "cover", backgroundPosition: "center 30%" }}
       >
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/80 via-dark-bg/70 to-dark-bg" />
