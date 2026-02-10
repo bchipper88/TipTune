@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Music, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { authenticate } from "./actions";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,19 +21,20 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    try {
-      const result = await authenticate(form.email, form.password);
-      if (result?.error) {
-        setError(result.error);
-      }
-      // On success, the server action redirects to /dashboard automatically
-    } catch {
-      // Redirect throws are caught here — that's expected behavior
-      // If it's a real error, it'll show in the catch
-      setError("");
-    } finally {
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+
+    if (authError) {
+      setError("Invalid email or password");
       setLoading(false);
+      return;
     }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -113,8 +116,11 @@ export default function LoginPage() {
             size="lg"
             className="w-full gap-2"
             onClick={async () => {
-              const { signIn } = await import("next-auth/react");
-              signIn("google", { callbackUrl: "/dashboard" });
+              const supabase = createClient();
+              supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/auth/callback` },
+              });
             }}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

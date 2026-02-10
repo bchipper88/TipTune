@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // One-time seed endpoint to create an admin artist account
 // Visit /api/seed to create the account, then delete this route in production
 export async function GET() {
   try {
     const email = "admin@tiptune.com";
+    const password = "TipTune2026!";
 
-    // Check if already seeded
+    // Check if already seeded in Prisma
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({
@@ -17,13 +18,27 @@ export async function GET() {
       });
     }
 
-    const passwordHash = await bcrypt.hash("TipTune2026!", 12);
+    // Create user in Supabase Auth
+    const supabase = createAdminClient();
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
 
+    if (authError || !authData.user) {
+      return NextResponse.json(
+        { error: "Failed to create Supabase auth user", details: authError?.message },
+        { status: 500 }
+      );
+    }
+
+    // Create Prisma user with Supabase auth UUID
     const user = await db.user.create({
       data: {
+        id: authData.user.id,
         name: "Admin",
         email,
-        passwordHash,
         role: "ARTIST",
         artistProfile: {
           create: {
@@ -40,7 +55,7 @@ export async function GET() {
       include: { artistProfile: true },
     });
 
-    // Create some sample songs in the library
+    // Create sample songs
     if (user.artistProfile) {
       await db.song.createMany({
         data: [
@@ -57,14 +72,13 @@ export async function GET() {
         ],
       });
 
-      // Create a sample event
       await db.event.create({
         data: {
           artistProfileId: user.artistProfile.id,
           name: "Friday Night Live",
           venueName: "The Blue Note",
           venueAddress: "123 Main St, Nashville, TN",
-          startsAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
+          startsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
           status: "LIVE",
           eventSlug: "friday-night-live-" + Math.random().toString(36).substring(2, 8),
           description: "Live covers every Friday night. Request your favorites!",
@@ -74,10 +88,7 @@ export async function GET() {
 
     return NextResponse.json({
       message: "Admin account created!",
-      login: {
-        email: "admin@tiptune.com",
-        password: "TipTune2026!",
-      },
+      login: { email, password },
       artistProfile: user.artistProfile?.profileSlug,
       note: "10 sample songs and a live event have been created. Go to /login to sign in.",
     });

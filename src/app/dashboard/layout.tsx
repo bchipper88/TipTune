@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Music,
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,7 +31,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg">
@@ -71,10 +80,7 @@ export default function DashboardLayout({
               </Link>
             ))}
             <button
-              onClick={async () => {
-                const { signOut } = await import("next-auth/react");
-                signOut({ callbackUrl: "/" });
-              }}
+              onClick={handleSignOut}
               className="mt-4 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-danger hover:bg-danger/10"
             >
               <LogOut className="h-5 w-5" />
@@ -113,10 +119,7 @@ export default function DashboardLayout({
 
         <div className="absolute bottom-6 left-3 right-3">
           <button
-            onClick={async () => {
-              const { signOut } = await import("next-auth/react");
-              signOut({ callbackUrl: "/" });
-            }}
+            onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-card-bg hover:text-danger"
           >
             <LogOut className="h-5 w-5" />

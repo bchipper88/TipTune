@@ -7,6 +7,7 @@ import { Music, Mail, Lock, User, Mic2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,25 +28,43 @@ export default function RegisterPage() {
     setError("");
 
     try {
+      const supabase = createClient();
+
+      // 1. Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: { name: form.name },
+        },
+      });
+
+      if (authError || !authData.user) {
+        setError(authError?.message || "Registration failed");
+        return;
+      }
+
+      // 2. Create the Prisma user record
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, role }),
+        body: JSON.stringify({
+          supabaseId: authData.user.id,
+          name: form.name,
+          email: form.email,
+          role,
+          stageName: form.stageName,
+        }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || "Registration failed");
         return;
       }
 
-      const { signIn } = await import("next-auth/react");
-      await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        callbackUrl: role === "ARTIST" ? "/dashboard" : "/explore",
-      });
+      router.push(role === "ARTIST" ? "/dashboard" : "/explore");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -154,9 +173,9 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Password (min 8 characters)"
+                placeholder="Password (min 6 characters)"
                 className="pl-10 pr-10"
-                minLength={8}
+                minLength={6}
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
@@ -194,9 +213,12 @@ export default function RegisterPage() {
             variant="ghost"
             size="lg"
             className="w-full gap-2"
-            onClick={async () => {
-              const { signIn } = await import("next-auth/react");
-              signIn("google", { callbackUrl: "/dashboard" });
+            onClick={() => {
+              const supabase = createClient();
+              supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/auth/callback` },
+              });
             }}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

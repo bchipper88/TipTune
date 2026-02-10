@@ -34,61 +34,19 @@ enum TipStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?   @map("password_hash")
-  name          String?
-  image         String?
-  role          UserRole  @default(AUDIENCE)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  emailVerified DateTime? @map("email_verified")
-  accounts      Account[]
-  sessions      Session[]
+  id        String   @id // Supabase Auth UUID
+  email     String   @unique
+  name      String?
+  image     String?
+  role      UserRole @default(AUDIENCE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   artistProfile ArtistProfile?
   tips          Tip[]
   follows       Follow[]
 
   @@map("users")
-}
-
-model Account {
-  userId            String  @map("user_id")
-  type              String
-  provider          String
-  providerAccountId String  @map("provider_account_id")
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
-  @@map("accounts")
-}
-
-model Session {
-  sessionToken String   @unique @map("session_token")
-  userId       String   @map("user_id")
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
-  @@map("verification_tokens")
 }
 
 model ArtistProfile {
