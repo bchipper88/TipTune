@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search, Plus, Music, GripVertical, Trash2, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,22 @@ export default function LibraryPage() {
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
+
+  // Load existing songs from database on mount
+  useEffect(() => {
+    async function loadSongs() {
+      try {
+        const res = await fetch("/api/songs");
+        if (res.ok) {
+          const songs = await res.json();
+          setLibrary(songs);
+        }
+      } catch {
+        console.error("Failed to load songs");
+      }
+    }
+    loadSongs();
+  }, []);
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
