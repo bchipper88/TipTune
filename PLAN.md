@@ -18,18 +18,18 @@
 ### Color Scheme
 
 ```
-Primary:     #6C5CE7  (Electric Purple — energy, nightlife, premium feel)
-Secondary:   #00D2FF  (Cyan/Neon Blue — digital, modern, contrast)
-Accent:      #FFD93D  (Gold — money, tipping, reward)
-Success:     #00E676  (Green — confirmations, active states)
-Dark BG:     #0D0D1A  (Near Black — nightclub/venue feel)
-Card BG:     #1A1A2E  (Dark Navy — elevated surfaces)
-Text:        #F5F5F5  (Off-white — readability on dark)
-Muted Text:  #8B8BA3  (Gray-purple — secondary info)
-Danger:      #FF6B6B  (Red — warnings, alerts)
+Dark BG:          #1A1630  (Deep indigo-black — venue darkness)
+Card BG:          #241F3F  (Rich purple-black — elevated surfaces)
+Primary Accent:   #3B6CFF  (Electric Blue — actions, links, primary CTA)
+Secondary Accent: #6C4DFF  (Purple — gradient partner, secondary actions)
+Warm Glow Accent: #D47A3C  (Amber/Orange — money, tips, urgency, warm stage light)
+Text White:       #EDEBFF  (Lavender white — soft on dark, not harsh)
+Muted Gray:       #8C8AA6  (Purple-gray — secondary text, labels)
+Success:          #34D399  (Green — confirmations)
+Danger:           #EF4444  (Red — warnings, alerts)
 ```
 
-**Design Rationale:** Dark-first design mirrors the venue environment (bars, clubs, stages). Purple/cyan/gold evokes nightlife energy. Gold specifically reinforces the tipping/money mechanic.
+**Design Rationale:** Deep indigo-purple foundation mirrors a dark venue. Blue-to-purple gradient creates depth and movement. The warm amber/orange accent is the money color — it draws the eye to tip amounts, CTAs, and the "Next Up" glow. Lavender-tinted text feels softer and more cohesive than pure white on these backgrounds.
 
 ### Typography
 - **Headings:** Inter (bold/black weight) — clean, modern, great on mobile
@@ -76,8 +76,8 @@ Danger:      #FF6B6B  (Red — warnings, alerts)
 - **Account creation** (email/password + OAuth with Google)
 - **Artist profile** (name, bio, photo, genres, social links)
 - **Song library builder**
-  - Search via Spotify API (metadata only — title, artist, album art, genre)
-  - Songs are copied into our DB (we don't stream from Spotify)
+  - Search via Deezer API (metadata only — title, artist, album art, genre)
+  - Songs are copied into our DB (we don't stream from Deezer)
   - Manual song entry option
   - Drag-and-drop reordering / preferred order
   - Categories/tags (genre, decade, mood)
@@ -158,7 +158,7 @@ Danger:      #FF6B6B  (Red — warnings, alerts)
 | **Auth** | NextAuth.js (Auth.js v5) | Email/password + Google OAuth, session management |
 | **Payments** | Stripe (Payment Intents + Connect) | Apple Pay/Google Pay, instant payouts, marketplace model |
 | **Real-time** | Supabase Realtime (or Socket.io) | Live queue updates as tips come in |
-| **Song API** | Spotify Web API | Search/metadata for library building (free tier) |
+| **Song API** | Deezer API | Search/metadata for library building (free tier) |
 | **QR Codes** | `qrcode` npm package | Generate QR codes server-side |
 | **File Storage** | Supabase Storage (or S3) | Artist photos, event images |
 | **Hosting** | Vercel | Optimized for Next.js, edge functions, easy deploy |
@@ -178,7 +178,7 @@ User
 │   │
 │   ├── Songs[] (artist's library)
 │   │   ├── id, artist_profile_id, title, original_artist
-│   │   ├── album_art_url, genre, decade, spotify_id
+│   │   ├── album_art_url, genre, decade, deezer_id
 │   │   ├── sort_order, is_active
 │   │   │
 │   ├── Events[]
@@ -219,7 +219,7 @@ POST   /api/songs                       — add song to library
 PUT    /api/songs/:id                   — update song
 DELETE /api/songs/:id                   — remove song
 PUT    /api/songs/reorder               — bulk reorder
-GET    /api/songs/search/spotify        — search Spotify API
+GET    /api/songs/search/deezer        — search Deezer API
 
 EVENTS
 POST   /api/events                      — create event
@@ -270,7 +270,7 @@ When a tip is submitted:
 
 /dashboard                           — Artist dashboard (events, earnings)
 /dashboard/library                   — Manage song library
-/dashboard/library/add               — Add songs (Spotify search)
+/dashboard/library/add               — Add songs (Deezer search)
 /dashboard/events                    — Manage events
 /dashboard/events/new                — Create event
 /dashboard/events/:id                — Event management + live controls
@@ -304,7 +304,7 @@ When a tip is submitted:
 - [ ] Artist registration + profile creation
 
 ### Sprint 2 (Week 3-4): Artist Core
-- [ ] Spotify API integration (search endpoint)
+- [ ] Deezer API integration (search endpoint)
 - [ ] Song library: add, remove, reorder, search
 - [ ] Event CRUD (create, edit, delete)
 - [ ] QR code generation (artist page + event page)
@@ -362,26 +362,22 @@ Flow:
 
 ---
 
-## 8. Spotify API Integration Plan
+## 8. Deezer API Integration Plan
 
 ### What We Use
-- **Search endpoint** (`/v1/search`) — find songs by title/artist
-- **Track metadata** — title, artist(s), album, album art URL, duration, popularity
+- **Search endpoint** (`https://api.deezer.com/search?q=...`) — find songs by title/artist
+- **Track metadata** — title, artist name, album title, album art URL, duration, preview URL
+- **No authentication required** — Deezer's search API is completely open (simple GET requests)
 - **We do NOT stream music** — we only use metadata to build the artist's library
-
-### Auth Flow
-- Server-side Client Credentials flow (no user login needed)
-- Store `client_id` and `client_secret` in env vars
-- Token refresh handled automatically
 
 ### Data Flow
 ```
 1. Artist searches "Sweet Caroline" in library builder
-2. Frontend → GET /api/songs/search/spotify?q=Sweet+Caroline
-3. Backend → Spotify Search API → returns top results
+2. Frontend → GET /api/songs/search?q=Sweet+Caroline
+3. Backend → GET https://api.deezer.com/search?q=Sweet+Caroline → returns results
 4. Artist clicks "Add to Library" on a result
-5. We copy: title, artist, album_art_url, spotify_track_id, genre
-6. Song is stored in OUR database (no ongoing Spotify dependency)
+5. We copy: title, artist_name, album_art_url, deezer_track_id, duration
+6. Song is stored in OUR database (no ongoing Deezer dependency)
 7. Artist can then reorder, categorize, toggle active/inactive
 ```
 
@@ -397,7 +393,7 @@ For this session, I'll scaffold the entire project and build out Sprint 1 + part
 4. **Dark-themed mobile-first layout** with the TipTune brand
 5. **Landing page** — marketing page explaining the product
 6. **Artist registration + dashboard shell**
-7. **Song library** with Spotify search integration
+7. **Song library** with Deezer search integration
 8. **Event creation** with QR code generation
 9. **Public event page** with queue display
 10. **Audience request + tip flow** (UI — Stripe integration stubbed)

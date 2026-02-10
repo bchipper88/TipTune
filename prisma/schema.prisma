@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ARTIST
+  AUDIENCE
+  ADMIN
+}
+
+enum EventStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+}
+
+enum RequestStatus {
+  QUEUED
+  PLAYING
+  COMPLETED
+  SKIPPED
+}
+
+enum TipStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  name          String?
+  image         String?
+  role          UserRole  @default(AUDIENCE)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  emailVerified DateTime? @map("email_verified")
+  accounts      Account[]
+  sessions      Session[]
+
+  artistProfile ArtistProfile?
+  tips          Tip[]
+  follows       Follow[]
+
+  @@map("users")
+}
+
+model Account {
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model ArtistProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  stageName       String   @map("stage_name")
+  bio             String?
+  genres          String[] @default([])
+  socialLinks     Json?    @map("social_links")
+  profileSlug     String   @unique @map("profile_slug")
+  avatarUrl       String?  @map("avatar_url")
+  stripeAccountId String?  @map("stripe_account_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songs     Song[]
+  events    Event[]
+  followers Follow[]
+
+  @@map("artist_profiles")
+}
+
+model Song {
+  id              String   @id @default(cuid())
+  artistProfileId String   @map("artist_profile_id")
+  title           String
+  originalArtist  String   @map("original_artist")
+  albumArtUrl     String?  @map("album_art_url")
+  genre           String?
+  decade          String?
+  deezerTrackId   String?  @map("deezer_track_id")
+  duration        Int?
+  sortOrder       Int      @default(0) @map("sort_order")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  artistProfile ArtistProfile @relation(fields: [artistProfileId], references: [id], onDelete: Cascade)
+  requests      SongRequest[]
+
+  @@map("songs")
+}
+
+model Event {
+  id              String      @id @default(cuid())
+  artistProfileId String      @map("artist_profile_id")
+  name            String
+  venueName       String      @map("venue_name")
+  venueAddress    String?     @map("venue_address")
+  startsAt        DateTime    @map("starts_at")
+  endsAt          DateTime?   @map("ends_at")
+  status          EventStatus @default(UPCOMING)
+  eventSlug       String      @unique @map("event_slug")
+  description     String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  artistProfile ArtistProfile @relation(fields: [artistProfileId], references: [id], onDelete: Cascade)
+  requests      SongRequest[]
+
+  @@map("events")
+}
+
+model SongRequest {
+  id        String        @id @default(cuid())
+  eventId   String        @map("event_id")
+  songId    String        @map("song_id")
+  status    RequestStatus @default(QUEUED)
+  totalTips Int           @default(0) @map("total_tips")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  song  Song  @relation(fields: [songId], references: [id], onDelete: Cascade)
+  tips  Tip[]
+
+  @@unique([eventId, songId])
+  @@map("song_requests")
+}
+
+model Tip {
+  id                    String    @id @default(cuid())
+  requestId             String    @map("request_id")
+  userId                String?   @map("user_id")
+  amount                Int
+  message               String?
+  stripePaymentIntentId String?   @map("stripe_payment_intent_id")
+  status                TipStatus @default(PENDING)
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  request SongRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user    User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("tips")
+}
+
+model Follow {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  artistProfileId String   @map("artist_profile_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artistProfile ArtistProfile @relation(fields: [artistProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artistProfileId])
+  @@map("follows")
+}
