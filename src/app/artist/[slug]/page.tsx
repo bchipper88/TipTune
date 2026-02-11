@@ -1,63 +1,83 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Music,
   Calendar,
   MapPin,
   Users,
-  QrCode,
   ExternalLink,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+interface ArtistData {
+  stageName: string;
+  bio: string | null;
+  genres: string[];
+  socialLinks: Record<string, string> | null;
+  avatarUrl: string | null;
+  followerCount: number;
+}
+
+interface EventItem {
+  id: string;
+  name: string;
+  venueName: string;
+  venueAddress?: string;
+  startsAt: string;
+  status: "UPCOMING" | "LIVE" | "COMPLETED";
+  eventSlug: string;
+}
+
 export default function ArtistProfilePage() {
-  // Demo data — in production this fetches from /api/artists/:slug
-  const artist = {
-    stageName: "The House Band",
-    bio: "Covering your favorite hits every weekend at venues across the city. From classic rock to modern pop — if you can sing along, we can play it.",
-    genres: ["Rock", "Pop", "Country", "Classic Rock"],
-    socialLinks: {
-      instagram: "https://instagram.com/thehouseband",
-      facebook: "https://facebook.com/thehouseband",
-    },
-    followerCount: 142,
-  };
+  const { slug } = useParams<{ slug: string }>();
+  const [artist, setArtist] = useState<ArtistData | null>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([]);
+  const [pastEvents, setPastEvents] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcomingEvents = [
-    {
-      id: "1",
-      name: "Friday Night Live",
-      venueName: "The Blue Note",
-      venueAddress: "123 Main St",
-      startsAt: "2026-02-13T20:00:00",
-      status: "UPCOMING" as const,
-      eventSlug: "friday-night-live-abc123",
-    },
-    {
-      id: "2",
-      name: "Saturday Showdown",
-      venueName: "Rusty Tap",
-      venueAddress: "456 Oak Ave",
-      startsAt: "2026-02-14T21:00:00",
-      status: "UPCOMING" as const,
-      eventSlug: "saturday-showdown-def456",
-    },
-  ];
+  useEffect(() => {
+    fetch(`/api/artists/${slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profile) setArtist(data.profile);
+        if (data.upcomingEvents) setUpcomingEvents(data.upcomingEvents);
+        if (data.pastEvents) setPastEvents(data.pastEvents);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [slug]);
 
-  const pastEvents = [
-    {
-      id: "3",
-      name: "Last Weekend Jam",
-      venueName: "The Blue Note",
-      startsAt: "2026-02-07T20:00:00",
-      status: "COMPLETED" as const,
-      eventSlug: "last-weekend-jam-ghi789",
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-dark-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-muted" />
+      </div>
+    );
+  }
+
+  if (!artist) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-dark-bg px-4">
+        <div className="text-center">
+          <Music className="mx-auto mb-4 h-12 w-12 text-muted" />
+          <h2 className="mb-2 text-xl font-bold">Artist Not Found</h2>
+          <p className="text-muted">This artist profile doesn&apos;t exist.</p>
+          <Link href="/explore" className="mt-4 inline-block text-primary hover:underline">
+            Browse Events
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const socialLinks = (artist.socialLinks || {}) as Record<string, string>;
 
   return (
     <div className="min-h-screen bg-dark-bg">
@@ -85,16 +105,18 @@ export default function ArtistProfilePage() {
               </Badge>
             ))}
           </div>
-          <p className="mx-auto mt-4 max-w-md text-muted">{artist.bio}</p>
+          {artist.bio && (
+            <p className="mx-auto mt-4 max-w-md text-muted">{artist.bio}</p>
+          )}
 
           <div className="mt-4 flex items-center justify-center gap-4">
             <div className="flex items-center gap-1 text-sm text-muted">
               <Users className="h-4 w-4" />
               {artist.followerCount} followers
             </div>
-            {artist.socialLinks.instagram && (
+            {socialLinks.instagram && (
               <a
-                href={artist.socialLinks.instagram}
+                href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-sm text-muted hover:text-text-white"
@@ -110,52 +132,53 @@ export default function ArtistProfilePage() {
               <Users className="h-4 w-4" />
               Follow
             </Button>
-            <Button variant="ghost" className="gap-2">
-              <QrCode className="h-4 w-4" />
-              QR Code
-            </Button>
           </div>
         </div>
 
         {/* Upcoming Events */}
-        <div className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold">Upcoming Events</h2>
-          <div className="space-y-3">
-            {upcomingEvents.map((event) => (
-              <Link key={event.id} href={`/event/${event.eventSlug}`}>
-                <Card className="group cursor-pointer transition-all hover:border-warm/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-warm/10 p-2.5">
-                        <Calendar className="h-5 w-5 text-warm" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-text-white">{event.name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {event.venueName}
+        {upcomingEvents.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-lg font-semibold">Upcoming Events</h2>
+            <div className="space-y-3">
+              {upcomingEvents.map((event) => (
+                <Link key={event.id} href={`/event/${event.eventSlug}`}>
+                  <Card className="group cursor-pointer transition-all hover:border-warm/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-warm/10 p-2.5">
+                          <Calendar className="h-5 w-5 text-warm" />
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted">
-                          <Clock className="h-3.5 w-3.5" />
-                          {new Date(event.startsAt).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-text-white">{event.name}</p>
+                            {event.status === "LIVE" && <Badge variant="warm">LIVE</Badge>}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {event.venueName}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted">
+                            <Clock className="h-3.5 w-3.5" />
+                            {new Date(event.startsAt).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </div>
                         </div>
                       </div>
+                      <Button size="sm" variant="warm">
+                        View
+                      </Button>
                     </div>
-                    <Button size="sm" variant="warm">
-                      View
-                    </Button>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Past Events */}
         {pastEvents.length > 0 && (
@@ -180,6 +203,15 @@ export default function ArtistProfilePage() {
               ))}
             </div>
           </div>
+        )}
+
+        {upcomingEvents.length === 0 && pastEvents.length === 0 && (
+          <Card className="text-center">
+            <div className="py-8">
+              <Calendar className="mx-auto mb-3 h-10 w-10 text-muted" />
+              <p className="text-muted">No events yet</p>
+            </div>
+          </Card>
         )}
       </div>
     </div>

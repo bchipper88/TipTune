@@ -1,25 +1,34 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
-    const { supabaseId, name, email, role, stageName } = await req.json();
+    const { name, role, stageName } = await req.json();
 
-    if (!supabaseId || !email || !name) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    // Verify the Supabase session server-side instead of trusting a client-provided ID
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const existingUser = await db.user.findUnique({ where: { id: supabaseId } });
+    if (!name) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const existingUser = await db.user.findUnique({ where: { id: user.id } });
     if (existingUser) {
       return NextResponse.json({ id: existingUser.id, email: existingUser.email });
     }
 
-    const user = await db.user.create({
+    const dbUser = await db.user.create({
       data: {
-        id: supabaseId,
+        id: user.id,
         name,
-        email,
+        email: user.email!,
         role: role || "AUDIENCE",
         ...(role === "ARTIST" && stageName
           ? {
@@ -36,10 +45,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: dbUser.role,
     });
   } catch (error) {
     console.error("Registration error:", error);

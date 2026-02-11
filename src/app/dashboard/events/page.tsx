@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar, Plus, MapPin, Clock, ArrowRight, Radio } from "lucide-react";
+import { Calendar, Plus, MapPin, Clock, ArrowRight, Radio, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,18 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const [events] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/events")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setEvents(data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const statusBadge = (status: Event["status"]) => {
     switch (status) {
@@ -47,7 +58,11 @@ export default function EventsPage() {
         </Link>
       </div>
 
-      {events.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted" />
+        </div>
+      ) : events.length > 0 ? (
         <div className="space-y-3">
           {events.map((event) => (
             <Link key={event.id} href={`/dashboard/events/${event.id}/live`}>

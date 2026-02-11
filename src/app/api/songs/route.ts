@@ -65,3 +65,34 @@ export async function POST(req: Request) {
 
   return NextResponse.json(song);
 }
+
+export async function DELETE(req: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const profile = await db.artistProfile.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  if (!profile) {
+    return NextResponse.json({ error: "Artist profile not found" }, { status: 404 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const songId = searchParams.get("id");
+
+  if (!songId) {
+    return NextResponse.json({ error: "Song ID required" }, { status: 400 });
+  }
+
+  const song = await db.song.findUnique({ where: { id: songId } });
+  if (!song || song.artistProfileId !== profile.id) {
+    return NextResponse.json({ error: "Song not found" }, { status: 404 });
+  }
+
+  await db.song.delete({ where: { id: songId } });
+
+  return NextResponse.json({ success: true });
+}

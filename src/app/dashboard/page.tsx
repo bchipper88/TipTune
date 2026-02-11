@@ -1,18 +1,41 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Library, Calendar, DollarSign, Plus, ArrowRight, Music } from "lucide-react";
+import { Library, Calendar, DollarSign, Plus, ArrowRight, Music, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+interface DashboardStats {
+  totalSongs: number;
+  totalEvents: number;
+  totalEarnings: number;
+  activeEvent: { name: string; id: string } | null;
+}
+
 export default function DashboardPage() {
-  // In production, these would come from API calls
-  const stats = {
+  const [stats, setStats] = useState<DashboardStats>({
     totalSongs: 0,
     totalEvents: 0,
     totalEarnings: 0,
-    activeEvent: null as null | { name: string; id: string },
+    activeEvent: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) setStats(data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const formatCents = (cents: number) => {
+    const dollars = cents / 100;
+    return `$${dollars.toFixed(2)}`;
   };
 
   return (
@@ -39,7 +62,11 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm text-muted">Songs in Library</p>
-              <p className="text-2xl font-bold">{stats.totalSongs}</p>
+              {loading ? (
+                <Loader2 className="mt-1 h-5 w-5 animate-spin text-muted" />
+              ) : (
+                <p className="text-2xl font-bold">{stats.totalSongs}</p>
+              )}
             </div>
           </div>
         </Card>
@@ -51,7 +78,11 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm text-muted">Total Events</p>
-              <p className="text-2xl font-bold">{stats.totalEvents}</p>
+              {loading ? (
+                <Loader2 className="mt-1 h-5 w-5 animate-spin text-muted" />
+              ) : (
+                <p className="text-2xl font-bold">{stats.totalEvents}</p>
+              )}
             </div>
           </div>
         </Card>
@@ -63,7 +94,13 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm text-muted">Total Earnings</p>
-              <p className="font-mono text-2xl font-bold">$0.00</p>
+              {loading ? (
+                <Loader2 className="mt-1 h-5 w-5 animate-spin text-muted" />
+              ) : (
+                <p className="font-mono text-2xl font-bold">
+                  {formatCents(stats.totalEarnings)}
+                </p>
+              )}
             </div>
           </div>
         </Card>

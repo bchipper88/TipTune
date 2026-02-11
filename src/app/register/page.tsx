@@ -44,14 +44,12 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2. Create the Prisma user record
+      // 2. Create the Prisma user record (server verifies session, no client-sent ID)
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          supabaseId: authData.user.id,
           name: form.name,
-          email: form.email,
           role,
           stageName: form.stageName,
         }),

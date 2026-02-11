@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Music,
@@ -11,6 +12,7 @@ import {
   ArrowLeft,
   Flame,
   Crown,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +20,7 @@ import { Card } from "@/components/ui/card";
 
 interface QueueItem {
   id: string;
-  song: { title: string; originalArtist: string; albumArtUrl?: string };
+  song: { id: string; title: string; originalArtist: string; albumArtUrl?: string };
   totalTips: number;
   status: string;
 }
@@ -30,7 +32,14 @@ interface LibrarySong {
   albumArtUrl?: string;
 }
 
-// Tip amount presets in cents
+interface EventData {
+  id: string;
+  name: string;
+  status: string;
+  eventSlug: string;
+  artistProfile: { stageName: string; profileSlug: string };
+}
+
 const TIP_AMOUNTS = [
   { label: "$1", value: 100 },
   { label: "$3", value: 300 },
@@ -40,61 +49,37 @@ const TIP_AMOUNTS = [
 ];
 
 export default function PublicEventPage() {
+  const { slug } = useParams<{ slug: string }>();
   const [view, setView] = useState<"queue" | "browse" | "tip">("queue");
   const [selectedSong, setSelectedSong] = useState<LibrarySong | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number>(500);
   const [customAmount, setCustomAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [tipSuccess, setTipSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Demo data
-  const eventName = "Friday Night Live";
-  const artistName = "The House Band";
-  const queue: QueueItem[] = [
-    {
-      id: "1",
-      song: { title: "Don't Stop Believin'", originalArtist: "Journey" },
-      totalTips: 4700,
-      status: "QUEUED",
-    },
-    {
-      id: "2",
-      song: { title: "Sweet Caroline", originalArtist: "Neil Diamond" },
-      totalTips: 3200,
-      status: "QUEUED",
-    },
-    {
-      id: "3",
-      song: { title: "Piano Man", originalArtist: "Billy Joel" },
-      totalTips: 2800,
-      status: "QUEUED",
-    },
-    {
-      id: "4",
-      song: { title: "Bohemian Rhapsody", originalArtist: "Queen" },
-      totalTips: 1500,
-      status: "QUEUED",
-    },
-    {
-      id: "5",
-      song: { title: "Living on a Prayer", originalArtist: "Bon Jovi" },
-      totalTips: 800,
-      status: "QUEUED",
-    },
-  ];
+  const [event, setEvent] = useState<EventData | null>(null);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [library, setLibrary] = useState<LibrarySong[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const library: LibrarySong[] = [
-    { id: "s1", title: "Sweet Home Alabama", originalArtist: "Lynyrd Skynyrd" },
-    { id: "s2", title: "Mr. Brightside", originalArtist: "The Killers" },
-    { id: "s3", title: "Wonderwall", originalArtist: "Oasis" },
-    { id: "s4", title: "Livin' on a Prayer", originalArtist: "Bon Jovi" },
-    { id: "s5", title: "Tiny Dancer", originalArtist: "Elton John" },
-    { id: "s6", title: "Brown Eyed Girl", originalArtist: "Van Morrison" },
-    { id: "s7", title: "Take Me Home, Country Roads", originalArtist: "John Denver" },
-    { id: "s8", title: "Friends in Low Places", originalArtist: "Garth Brooks" },
-    { id: "s9", title: "Hey Jude", originalArtist: "The Beatles" },
-    { id: "s10", title: "Hotel California", originalArtist: "Eagles" },
-  ];
+  const fetchData = useCallback(() => {
+    fetch(`/api/events/by-slug/${slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.event) setEvent(data.event);
+        if (data.requests) setQueue(data.requests);
+        if (data.library) setLibrary(data.library);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const filteredLibrary = library.filter(
     (s) =>
@@ -109,21 +94,59 @@ export default function PublicEventPage() {
 
   const nextUp = queue[0];
 
-  const handleTipSubmit = () => {
+  const handleTipSubmit = async () => {
+    if (!selectedSong || !event) return;
     const amount = customAmount ? parseInt(customAmount) * 100 : selectedAmount;
     if (amount < 100) return;
-    // In production: POST to /api/events/:id/requests with songId + tipAmount
-    // Then integrate Stripe for payment
-    setTipSuccess(true);
-    setTimeout(() => {
-      setTipSuccess(false);
-      setView("queue");
-      setSelectedSong(null);
-      setCustomAmount("");
-    }, 2000);
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}/requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: selectedSong.id, tipAmount: amount }),
+      });
+
+      if (res.ok) {
+        setTipSuccess(true);
+        setTimeout(() => {
+          setTipSuccess(false);
+          setView("queue");
+          setSelectedSong(null);
+          setCustomAmount("");
+          fetchData();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Tip failed:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Tip Success State
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-dark-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-muted" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-dark-bg px-4">
+        <div className="text-center">
+          <Music className="mx-auto mb-4 h-12 w-12 text-muted" />
+          <h2 className="mb-2 text-xl font-bold">Event Not Found</h2>
+          <p className="text-muted">This event may have ended or the link is incorrect.</p>
+          <Link href="/explore" className="mt-4 inline-block text-primary hover:underline">
+            Browse Events
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (tipSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-dark-bg px-4">
@@ -142,16 +165,18 @@ export default function PublicEventPage() {
     );
   }
 
+  const artistName = event.artistProfile.stageName;
+
   // Browse Library View
   if (view === "browse") {
     return (
       <div className="min-h-screen bg-dark-bg">
         <div className="mx-auto max-w-md px-4 pb-8 pt-4">
-          {/* Header */}
           <div className="mb-4 flex items-center gap-3">
             <button
               onClick={() => setView("queue")}
               className="rounded-lg p-1.5 text-muted hover:text-text-white"
+              aria-label="Back to queue"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -161,7 +186,6 @@ export default function PublicEventPage() {
             </div>
           </div>
 
-          {/* Search */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted" />
             <Input
@@ -174,13 +198,13 @@ export default function PublicEventPage() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-3 text-muted"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Song List */}
           <div className="space-y-2">
             {filteredLibrary.map((song) => (
               <button
@@ -201,6 +225,9 @@ export default function PublicEventPage() {
                 <DollarSign className="h-5 w-5 text-warm" />
               </button>
             ))}
+            {filteredLibrary.length === 0 && (
+              <p className="py-8 text-center text-muted">No songs found</p>
+            )}
           </div>
         </div>
       </div>
@@ -212,11 +239,11 @@ export default function PublicEventPage() {
     return (
       <div className="min-h-screen bg-dark-bg">
         <div className="mx-auto max-w-md px-4 pb-8 pt-4">
-          {/* Header */}
           <div className="mb-6 flex items-center gap-3">
             <button
               onClick={() => setView("browse")}
               className="rounded-lg p-1.5 text-muted hover:text-text-white"
+              aria-label="Back to song list"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -226,7 +253,6 @@ export default function PublicEventPage() {
             </div>
           </div>
 
-          {/* Selected Song */}
           <Card className="mb-6 border-primary/20">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -239,7 +265,6 @@ export default function PublicEventPage() {
             </div>
           </Card>
 
-          {/* Tip Amount Grid */}
           <div className="mb-4 grid grid-cols-3 gap-3">
             {TIP_AMOUNTS.map((amount) => (
               <button
@@ -275,30 +300,33 @@ export default function PublicEventPage() {
             </div>
           </div>
 
-          {/* Current Position Info */}
-          <div className="mb-6 rounded-xl bg-card-bg p-3 text-center text-sm text-muted">
-            <p>
-              Current #1 is at{" "}
-              <span className="font-mono font-semibold text-warm">
-                {formatCents(nextUp?.totalTips || 0)}
-              </span>
-            </p>
-            <p className="mt-1">Tip higher to get your song to #1!</p>
-          </div>
+          {nextUp && (
+            <div className="mb-6 rounded-xl bg-card-bg p-3 text-center text-sm text-muted">
+              <p>
+                Current #1 is at{" "}
+                <span className="font-mono font-semibold text-warm">
+                  {formatCents(nextUp.totalTips)}
+                </span>
+              </p>
+              <p className="mt-1">Tip higher to get your song to #1!</p>
+            </div>
+          )}
 
-          {/* Submit */}
           <Button
             variant="warm"
             size="lg"
             className="w-full gap-2 text-lg"
             onClick={handleTipSubmit}
+            disabled={submitting}
           >
-            <DollarSign className="h-5 w-5" />
-            Tip{" "}
-            {customAmount
-              ? `$${customAmount}`
-              : formatCents(selectedAmount)}{" "}
-            for this song
+            {submitting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <DollarSign className="h-5 w-5" />
+            )}
+            {submitting
+              ? "Submitting..."
+              : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
@@ -309,11 +337,10 @@ export default function PublicEventPage() {
     );
   }
 
-  // Main Queue View (default)
+  // Main Queue View
   return (
     <div className="min-h-screen bg-dark-bg">
       <div className="mx-auto max-w-md px-4 pb-24 pt-4">
-        {/* Event Header */}
         <div className="mb-6 text-center">
           <Link href="/" className="mb-2 inline-flex items-center gap-1.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
@@ -321,15 +348,21 @@ export default function PublicEventPage() {
             </div>
             <span className="text-sm font-bold text-text-white">TipTune</span>
           </Link>
-          <h1 className="text-xl font-bold">{eventName}</h1>
-          <p className="text-sm text-muted">{artistName}</p>
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-warm/10 px-3 py-1 text-xs font-semibold text-warm">
-            <span className="h-1.5 w-1.5 rounded-full bg-warm animate-pulse" />
-            LIVE NOW
-          </div>
+          <h1 className="text-xl font-bold">{event.name}</h1>
+          <Link
+            href={`/artist/${event.artistProfile.profileSlug}`}
+            className="text-sm text-primary hover:underline"
+          >
+            {artistName}
+          </Link>
+          {event.status === "LIVE" && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-warm/10 px-3 py-1 text-xs font-semibold text-warm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warm" />
+              LIVE NOW
+            </div>
+          )}
         </div>
 
-        {/* Next Up - Featured */}
         {nextUp && (
           <div className="mb-6">
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-warm">
@@ -358,7 +391,7 @@ export default function PublicEventPage() {
               <button
                 onClick={() => {
                   setSelectedSong({
-                    id: nextUp.id,
+                    id: nextUp.song.id,
                     title: nextUp.song.title,
                     originalArtist: nextUp.song.originalArtist,
                   });
@@ -373,50 +406,54 @@ export default function PublicEventPage() {
           </div>
         )}
 
-        {/* Rest of Queue */}
         <div className="mb-6">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
             In the Queue
           </p>
-          <div className="space-y-2">
-            {queue.slice(1).map((item, index) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-xl border border-border bg-card-bg p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-bg font-mono text-sm text-muted">
-                    {index + 2}
-                  </span>
-                  <div>
-                    <p className="font-medium text-text-white">{item.song.title}</p>
-                    <p className="text-sm text-muted">{item.song.originalArtist}</p>
+          {queue.length > 1 ? (
+            <div className="space-y-2">
+              {queue.slice(1).map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl border border-border bg-card-bg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-bg font-mono text-sm text-muted">
+                      {index + 2}
+                    </span>
+                    <div>
+                      <p className="font-medium text-text-white">{item.song.title}</p>
+                      <p className="text-sm text-muted">{item.song.originalArtist}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-semibold text-muted">
+                      {formatCents(item.totalTips)}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSelectedSong({
+                          id: item.song.id,
+                          title: item.song.title,
+                          originalArtist: item.song.originalArtist,
+                        });
+                        setView("tip");
+                      }}
+                      className="rounded-lg bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/30"
+                    >
+                      Boost
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-semibold text-muted">
-                    {formatCents(item.totalTips)}
-                  </span>
-                  <button
-                    onClick={() => {
-                      setSelectedSong({
-                        id: item.id,
-                        title: item.song.title,
-                        originalArtist: item.song.originalArtist,
-                      });
-                      setView("tip");
-                    }}
-                    className="rounded-lg bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/30"
-                  >
-                    Boost
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : !nextUp ? (
+            <p className="py-4 text-center text-sm text-muted">
+              No songs in the queue yet. Be the first to request!
+            </p>
+          ) : null}
         </div>
 
-        {/* Fixed Bottom CTA */}
         <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-dark-bg/95 p-4 backdrop-blur-sm">
           <div className="mx-auto max-w-md">
             <Button

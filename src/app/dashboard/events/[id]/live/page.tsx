@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import {
   Music,
   Play,
@@ -11,7 +12,10 @@ import {
   DollarSign,
   Users,
   Radio,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,84 +28,146 @@ interface QueueItem {
   _count: { tips: number };
 }
 
+interface EventData {
+  id: string;
+  name: string;
+  venueName: string;
+  venueAddress?: string;
+  startsAt: string;
+  status: "UPCOMING" | "LIVE" | "COMPLETED";
+  eventSlug: string;
+}
+
 export default function LiveEventPage() {
-  const [eventStatus, setEventStatus] = useState<"UPCOMING" | "LIVE" | "COMPLETED">("UPCOMING");
-  const [queue] = useState<QueueItem[]>([
-    // Demo data
-    {
-      id: "1",
-      song: { title: "Don't Stop Believin'", originalArtist: "Journey", albumArtUrl: "" },
-      totalTips: 4700,
-      status: "QUEUED",
-      _count: { tips: 8 },
-    },
-    {
-      id: "2",
-      song: { title: "Sweet Caroline", originalArtist: "Neil Diamond", albumArtUrl: "" },
-      totalTips: 3200,
-      status: "QUEUED",
-      _count: { tips: 5 },
-    },
-    {
-      id: "3",
-      song: { title: "Piano Man", originalArtist: "Billy Joel", albumArtUrl: "" },
-      totalTips: 2800,
-      status: "QUEUED",
-      _count: { tips: 4 },
-    },
-    {
-      id: "4",
-      song: { title: "Bohemian Rhapsody", originalArtist: "Queen", albumArtUrl: "" },
-      totalTips: 1500,
-      status: "QUEUED",
-      _count: { tips: 2 },
-    },
-  ]);
+  const { id } = useParams<{ id: string }>();
+  const [event, setEvent] = useState<EventData | null>(null);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+
+  const fetchData = useCallback(() => {
+    fetch(`/api/events/${id}/queue`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.event) setEvent(data.event);
+        if (data.requests) setQueue(data.requests);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const updateEventStatus = async (status: "LIVE" | "COMPLETED") => {
+    const res = await fetch(`/api/events/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setEvent((prev) => prev ? { ...prev, status: updated.status } : prev);
+    }
+  };
+
+  const updateRequestStatus = async (requestId: string, status: "PLAYING" | "COMPLETED" | "SKIPPED") => {
+    const res = await fetch(`/api/events/${id}/requests/${requestId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      fetchData();
+    }
+  };
+
+  const handleShowQR = async () => {
+    if (!showQR && !qrDataUrl && event) {
+      const baseUrl = window.location.origin;
+      const eventUrl = `${baseUrl}/event/${event.eventSlug}`;
+      try {
+        const { generateQRCodeDataURL } = await import("@/lib/qr");
+        const dataUrl = await generateQRCodeDataURL(eventUrl);
+        setQrDataUrl(dataUrl);
+      } catch {
+        // QR generation failed silently
+      }
+    }
+    setShowQR(!showQR);
+  };
 
   const totalEarnings = queue.reduce((sum, item) => sum + item.totalTips, 0);
-  const nextUp = queue.filter((q) => q.status === "QUEUED").sort((a, b) => b.totalTips - a.totalTips)[0];
+  const queuedItems = queue.filter((q) => q.status === "QUEUED").sort((a, b) => b.totalTips - a.totalTips);
+  const nextUp = queuedItems[0];
 
   const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-muted">Event not found</p>
+        <Link href="/dashboard/events" className="mt-4 inline-block text-primary hover:underline">
+          Back to Events
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Event Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
+          <Link href="/dashboard/events" className="mb-2 inline-flex items-center gap-1 text-sm text-muted hover:text-text-white">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Events
+          </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Friday Night Live</h1>
-            <Badge variant={eventStatus === "LIVE" ? "warm" : eventStatus === "UPCOMING" ? "primary" : "muted"}>
-              {eventStatus}
+            <h1 className="text-2xl font-bold">{event.name}</h1>
+            <Badge variant={event.status === "LIVE" ? "warm" : event.status === "UPCOMING" ? "primary" : "muted"}>
+              {event.status}
             </Badge>
           </div>
-          <p className="text-muted">The Blue Note · Tonight</p>
+          <p className="text-muted">{event.venueName}</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="ghost"
             size="sm"
             className="gap-1"
-            onClick={() => setShowQR(!showQR)}
+            onClick={handleShowQR}
           >
             <QrCode className="h-4 w-4" />
             QR Code
           </Button>
-          {eventStatus === "UPCOMING" && (
+          {event.status === "UPCOMING" && (
             <Button
               variant="warm"
               className="gap-2"
-              onClick={() => setEventStatus("LIVE")}
+              onClick={() => updateEventStatus("LIVE")}
             >
               <Radio className="h-4 w-4" />
               Go Live
             </Button>
           )}
-          {eventStatus === "LIVE" && (
+          {event.status === "LIVE" && (
             <Button
               variant="danger"
               className="gap-2"
-              onClick={() => setEventStatus("COMPLETED")}
+              onClick={() => updateEventStatus("COMPLETED")}
             >
               <Pause className="h-4 w-4" />
               End Event
@@ -110,21 +176,23 @@ export default function LiveEventPage() {
         </div>
       </div>
 
-      {/* QR Code Modal */}
+      {/* QR Code */}
       {showQR && (
         <Card className="mb-6 border-primary/20 text-center">
           <p className="mb-3 text-sm text-muted">
             Display this QR code at your venue so the audience can scan and request songs
           </p>
           <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-text-white">
-            <QrCode className="h-32 w-32 text-dark-bg" />
+            {qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qrDataUrl} alt="Event QR Code" className="h-44 w-44 rounded-xl" />
+            ) : (
+              <QrCode className="h-32 w-32 text-dark-bg" />
+            )}
           </div>
           <p className="mt-3 text-xs text-muted">
-            tiptune.com/event/friday-night-live-abc123
+            {typeof window !== "undefined" ? window.location.origin : ""}/event/{event.eventSlug}
           </p>
-          <Button variant="ghost" size="sm" className="mt-3">
-            Download Printable Version
-          </Button>
         </Card>
       )}
 
@@ -137,13 +205,13 @@ export default function LiveEventPage() {
         </Card>
         <Card className="text-center">
           <Music className="mx-auto mb-1 h-5 w-5 text-primary" />
-          <p className="text-xl font-bold">{queue.length}</p>
+          <p className="text-xl font-bold">{queuedItems.length}</p>
           <p className="text-xs text-muted">In Queue</p>
         </Card>
         <Card className="text-center">
           <Users className="mx-auto mb-1 h-5 w-5 text-secondary" />
           <p className="text-xl font-bold">{queue.reduce((sum, q) => sum + q._count.tips, 0)}</p>
-          <p className="text-xs text-muted">Total Tips</p>
+          <p className="text-xs text-muted">Tip Count</p>
         </Card>
       </div>
 
@@ -170,11 +238,21 @@ export default function LiveEventPage() {
                   {formatCents(nextUp.totalTips)}
                 </p>
                 <div className="mt-2 flex gap-2">
-                  <Button size="sm" variant="warm" className="gap-1">
+                  <Button
+                    size="sm"
+                    variant="warm"
+                    className="gap-1"
+                    onClick={() => updateRequestStatus(nextUp.id, "COMPLETED")}
+                  >
                     <Play className="h-3 w-3" />
-                    Play
+                    Played
                   </Button>
-                  <Button size="sm" variant="ghost" className="gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1"
+                    onClick={() => updateRequestStatus(nextUp.id, "SKIPPED")}
+                  >
                     <SkipForward className="h-3 w-3" />
                     Skip
                   </Button>
@@ -189,11 +267,9 @@ export default function LiveEventPage() {
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">
         Queue
       </h2>
-      <div className="space-y-2">
-        {queue
-          .filter((q) => q.status === "QUEUED" && q.id !== nextUp?.id)
-          .sort((a, b) => b.totalTips - a.totalTips)
-          .map((item, index) => (
+      {queuedItems.length > 1 ? (
+        <div className="space-y-2">
+          {queuedItems.slice(1).map((item, index) => (
             <div
               key={item.id}
               className="flex items-center justify-between rounded-xl border border-border bg-card-bg p-3"
@@ -215,17 +291,36 @@ export default function LiveEventPage() {
                   <p className="text-xs text-muted">{item._count.tips} tips</p>
                 </div>
                 <div className="flex gap-1">
-                  <button className="rounded-lg p-1.5 text-muted transition-colors hover:bg-success/10 hover:text-success">
+                  <button
+                    onClick={() => updateRequestStatus(item.id, "COMPLETED")}
+                    className="rounded-lg p-1.5 text-muted transition-colors hover:bg-success/10 hover:text-success"
+                    aria-label="Mark as played"
+                  >
                     <Check className="h-4 w-4" />
                   </button>
-                  <button className="rounded-lg p-1.5 text-muted transition-colors hover:bg-muted/10">
+                  <button
+                    onClick={() => updateRequestStatus(item.id, "SKIPPED")}
+                    className="rounded-lg p-1.5 text-muted transition-colors hover:bg-muted/10"
+                    aria-label="Skip song"
+                  >
                     <SkipForward className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             </div>
           ))}
-      </div>
+        </div>
+      ) : !nextUp ? (
+        <Card className="text-center">
+          <div className="py-8">
+            <Music className="mx-auto mb-3 h-10 w-10 text-muted" />
+            <p className="text-muted">No song requests yet</p>
+            <p className="mt-1 text-sm text-muted">Share your QR code to get the audience requesting songs!</p>
+          </div>
+        </Card>
+      ) : (
+        <p className="py-4 text-center text-sm text-muted">No more songs in queue</p>
+      )}
     </div>
   );
 }
