@@ -20,10 +20,10 @@ import { Card } from "@/components/ui/card";
 
 const steps = [
   {
-    icon: QrCode,
-    title: "Scan the QR Code",
+    icon: Smartphone,
+    title: "Find an Event",
     description:
-      "The artist displays a QR code at the venue. Scan it with your phone — no app download needed.",
+      "Scan a QR code at the venue or search for a live event nearby — no app download needed.",
     step: 1,
   },
   {
