@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Search, Plus, Music, GripVertical, Trash2, X, Loader2 } from "lucide-react";
+import { Search, Plus, Music, GripVertical, Trash2, X, Loader2, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -33,6 +33,9 @@ export default function LibraryPage() {
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [customSong, setCustomSong] = useState({ title: "", originalArtist: "" });
 
   // Load existing songs from database on mount
   useEffect(() => {
@@ -92,6 +95,31 @@ export default function LibraryPage() {
       setLibrary((prev) => prev.filter((s) => s.id !== songId));
     } catch {
       console.error("Failed to remove song");
+    }
+  };
+
+  const addCustomSong = async () => {
+    if (!customSong.title.trim() || !customSong.originalArtist.trim()) return;
+    setAddingCustom(true);
+    try {
+      const res = await fetch("/api/songs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: customSong.title.trim(),
+          originalArtist: customSong.originalArtist.trim(),
+        }),
+      });
+      if (res.ok) {
+        const song = await res.json();
+        setLibrary((prev) => [...prev, song]);
+        setCustomSong({ title: "", originalArtist: "" });
+        setShowCustomForm(false);
+      }
+    } catch {
+      console.error("Failed to add custom song");
+    } finally {
+      setAddingCustom(false);
     }
   };
 
@@ -206,6 +234,56 @@ export default function LibraryPage() {
               No results found. Try a different search term.
             </p>
           )}
+
+          {/* Custom Song Form */}
+          <div className="mt-4 border-t border-border pt-4">
+            {!showCustomForm ? (
+              <button
+                onClick={() => setShowCustomForm(true)}
+                className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-text-white"
+              >
+                <PenLine className="h-4 w-4" />
+                Add a custom song (originals, covers, etc.)
+              </button>
+            ) : (
+              <div>
+                <h4 className="mb-3 text-sm font-semibold">Add custom song</h4>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    placeholder="Song title"
+                    value={customSong.title}
+                    onChange={(e) => setCustomSong({ ...customSong, title: e.target.value })}
+                    onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
+                  />
+                  <Input
+                    placeholder="Artist name"
+                    value={customSong.originalArtist}
+                    onChange={(e) => setCustomSong({ ...customSong, originalArtist: e.target.value })}
+                    onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={addCustomSong}
+                      disabled={addingCustom || !customSong.title.trim() || !customSong.originalArtist.trim()}
+                      className="gap-1"
+                    >
+                      {addingCustom ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      Add
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowCustomForm(false);
+                        setCustomSong({ title: "", originalArtist: "" });
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
       )}
 
