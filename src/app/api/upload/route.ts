@@ -43,6 +43,13 @@ export async function POST(req: Request) {
     const fileName = `${user.id}/${Date.now()}.${ext}`;
 
     const admin = createAdminClient();
+
+    // Ensure the bucket exists (creates if missing)
+    const { data: buckets } = await admin.storage.listBuckets();
+    if (!buckets?.some((b) => b.name === "song-covers")) {
+      await admin.storage.createBucket("song-covers", { public: true });
+    }
+
     const { error: uploadError } = await admin.storage
       .from("song-covers")
       .upload(fileName, file, {
@@ -53,7 +60,7 @@ export async function POST(req: Request) {
     if (uploadError) {
       console.error("Upload error:", uploadError);
       return NextResponse.json(
-        { error: "Upload failed" },
+        { error: `Upload failed: ${uploadError.message}` },
         { status: 500 }
       );
     }

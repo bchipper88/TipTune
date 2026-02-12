@@ -124,6 +124,9 @@ export default function LibraryPage() {
         if (uploadRes.ok) {
           const { url } = await uploadRes.json();
           albumArtUrl = url;
+        } else {
+          // Fall back to data URL so the image still saves
+          albumArtUrl = coverPreview ?? undefined;
         }
       }
 
