@@ -216,6 +216,37 @@ body {
   box-shadow: 0 8px 30px rgba(59, 108, 255, 0.1);
 }
 
+/* Stat cards with colored top accent */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+}
+
+.stat-card-primary::before {
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  box-shadow: 0 0 12px var(--color-primary);
+}
+
+.stat-card-warm::before {
+  background: linear-gradient(90deg, transparent, var(--color-warm), transparent);
+  box-shadow: 0 0 12px var(--color-warm);
+}
+
+.stat-card-secondary::before {
+  background: linear-gradient(90deg, transparent, var(--color-secondary), transparent);
+  box-shadow: 0 0 12px var(--color-secondary);
+}
+
 /* How-it-works step connector line */
 @media (min-width: 768px) {
   .steps-connector {

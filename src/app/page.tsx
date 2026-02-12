@@ -82,13 +82,14 @@ const features = [
 ];
 
 const stats = [
-  { value: "Millions", label: "Songs Available", color: "text-primary" },
-  { value: "$0", label: "To Get Started", color: "text-warm" },
-  { value: "60s", label: "To Go Live", color: "text-secondary" },
+  { value: "Millions", label: "Songs Available", color: "text-primary", accent: "stat-card-primary" },
+  { value: "$0", label: "To Get Started", color: "text-warm", accent: "stat-card-warm" },
+  { value: "60", label: "To Go Live", color: "text-secondary", accent: "stat-card-secondary", suffix: "s", countUp: true },
 ];
 
 export default function LandingPage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const countUpRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -108,6 +109,44 @@ export default function LandingPage() {
     });
 
     return () => observerRef.current?.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    countUpRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement;
+            const target = parseInt(el.dataset.countup || "0", 10);
+
+            if (prefersReducedMotion) {
+              el.textContent = target.toString();
+            } else {
+              const duration = 1500;
+              const start = performance.now();
+              function tick(now: number) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(eased * target).toString();
+                if (progress < 1) requestAnimationFrame(tick);
+              }
+              requestAnimationFrame(tick);
+            }
+            countUpRef.current?.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    document.querySelectorAll("[data-countup]").forEach((el) => {
+      countUpRef.current?.observe(el);
+    });
+
+    return () => countUpRef.current?.disconnect();
   }, []);
 
   return (
@@ -312,16 +351,23 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section className="px-4 py-20">
         <div className="mx-auto max-w-4xl">
-          <div className="grid gap-8 text-center sm:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-3">
             {stats.map((stat, i) => (
               <div
                 key={stat.label}
-                className={`animate-on-scroll stagger-${i + 1}`}
+                className={`stat-card ${stat.accent} animate-on-scroll stagger-${i + 1} rounded-2xl border border-border bg-card-bg/60 p-8 text-center backdrop-blur-sm`}
               >
                 <p
-                  className={`stat-number mb-2 font-mono text-4xl font-black sm:text-5xl ${stat.color}`}
+                  className={`mb-2 font-mono text-4xl font-black sm:text-5xl ${stat.color}`}
                 >
-                  {stat.value}
+                  {stat.countUp ? (
+                    <>
+                      <span data-countup={stat.value}>0</span>
+                      {stat.suffix}
+                    </>
+                  ) : (
+                    stat.value
+                  )}
                 </p>
                 <p className="text-muted">{stat.label}</p>
               </div>
