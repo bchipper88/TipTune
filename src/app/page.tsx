@@ -25,7 +25,7 @@ const steps = [
     description:
       "Scan a QR code at the venue or search for a live event nearby — no app download needed.",
     step: 1,
-    image: "/steps/step-1-find.png",
+    image: "/step-1-find.png",
   },
   {
     icon: Music,
@@ -33,7 +33,7 @@ const steps = [
     description:
       "Browse the artist's library, find the song you want to hear, and submit your request.",
     step: 2,
-    image: "/steps/step-2-pick.png",
+    image: "/step-2-pick.png",
   },
   {
     icon: DollarSign,
@@ -41,7 +41,7 @@ const steps = [
     description:
       "Attach a tip to your request. The song with the most money plays next. Want yours sooner? Tip more.",
     step: 3,
-    image: "/steps/step-3-tip.png",
+    image: "/step-3-tip.png",
   },
 ];
 
