@@ -388,9 +388,17 @@ export default function PublicEventPage() {
             <Card glow="warm" className="next-up-glow border-warm/30 bg-warm/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warm/20">
-                    <Flame className="h-6 w-6 text-warm" />
-                  </div>
+                  {nextUp.song.albumArtUrl ? (
+                    <img
+                      src={nextUp.song.albumArtUrl}
+                      alt=""
+                      className="h-12 w-12 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warm/20">
+                      <Flame className="h-6 w-6 text-warm" />
+                    </div>
+                  )}
                   <div>
                     <p className="text-lg font-bold text-text-white">
                       {nextUp.song.title}
@@ -435,9 +443,17 @@ export default function PublicEventPage() {
                   className="flex items-center justify-between rounded-xl border border-border bg-card-bg p-3"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-dark-bg font-mono text-sm text-muted">
-                      {index + 2}
-                    </span>
+                    {item.song.albumArtUrl ? (
+                      <img
+                        src={item.song.albumArtUrl}
+                        alt=""
+                        className="h-10 w-10 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg font-mono text-sm text-muted">
+                        {index + 2}
+                      </span>
+                    )}
                     <div>
                       <p className="font-medium text-text-white">{item.song.title}</p>
                       <p className="text-sm text-muted">{item.song.originalArtist}</p>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { Search, Plus, Music, GripVertical, Trash2, X, Loader2, PenLine } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Search, Plus, Music, GripVertical, Trash2, X, Loader2, PenLine, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -36,6 +36,9 @@ export default function LibraryPage() {
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customSong, setCustomSong] = useState({ title: "", originalArtist: "" });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing songs from database on mount
   useEffect(() => {
@@ -98,22 +101,47 @@ export default function LibraryPage() {
     }
   };
 
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setCoverPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const addCustomSong = async () => {
     if (!customSong.title.trim() || !customSong.originalArtist.trim()) return;
     setAddingCustom(true);
     try {
+      let albumArtUrl: string | undefined;
+
+      // Upload cover image if provided
+      if (coverFile) {
+        const formData = new FormData();
+        formData.append("file", coverFile);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (uploadRes.ok) {
+          const { url } = await uploadRes.json();
+          albumArtUrl = url;
+        }
+      }
+
       const res = await fetch("/api/songs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: customSong.title.trim(),
           originalArtist: customSong.originalArtist.trim(),
+          ...(albumArtUrl && { albumArtUrl }),
         }),
       });
       if (res.ok) {
         const song = await res.json();
         setLibrary((prev) => [...prev, song]);
         setCustomSong({ title: "", originalArtist: "" });
+        setCoverFile(null);
+        setCoverPreview(null);
         setShowCustomForm(false);
       }
     } catch {
@@ -248,37 +276,60 @@ export default function LibraryPage() {
             ) : (
               <div>
                 <h4 className="mb-3 text-sm font-semibold">Add custom song</h4>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    placeholder="Song title"
-                    value={customSong.title}
-                    onChange={(e) => setCustomSong({ ...customSong, title: e.target.value })}
-                    onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
+                <div className="flex gap-3">
+                  {/* Cover image picker */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-dark-bg transition-colors hover:border-primary/50"
+                  >
+                    {coverPreview ? (
+                      <img src={coverPreview} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <ImagePlus className="h-6 w-6 text-muted" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleCoverSelect}
                   />
-                  <Input
-                    placeholder="Artist name"
-                    value={customSong.originalArtist}
-                    onChange={(e) => setCustomSong({ ...customSong, originalArtist: e.target.value })}
-                    onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={addCustomSong}
-                      disabled={addingCustom || !customSong.title.trim() || !customSong.originalArtist.trim()}
-                      className="gap-1"
-                    >
-                      {addingCustom ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                      Add
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setShowCustomForm(false);
-                        setCustomSong({ title: "", originalArtist: "" });
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Input
+                      placeholder="Song title"
+                      value={customSong.title}
+                      onChange={(e) => setCustomSong({ ...customSong, title: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
+                    />
+                    <Input
+                      placeholder="Artist name"
+                      value={customSong.originalArtist}
+                      onChange={(e) => setCustomSong({ ...customSong, originalArtist: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && addCustomSong()}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={addCustomSong}
+                        disabled={addingCustom || !customSong.title.trim() || !customSong.originalArtist.trim()}
+                        className="gap-1"
+                      >
+                        {addingCustom ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        Add
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setShowCustomForm(false);
+                          setCustomSong({ title: "", originalArtist: "" });
+                          setCoverFile(null);
+                          setCoverPreview(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
