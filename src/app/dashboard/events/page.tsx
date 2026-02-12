@@ -21,6 +21,7 @@ interface Event {
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"active" | "past">("active");
 
   useEffect(() => {
     fetch("/api/events")
@@ -48,7 +49,9 @@ export default function EventsPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Events</h1>
-          <p className="text-muted">{events.length} events</p>
+          <p className="text-muted">
+            {events.length} {events.length === 1 ? "event" : "events"}
+          </p>
         </div>
         <Link href="/dashboard/events/new">
           <Button variant="warm" className="gap-2">
@@ -58,13 +61,45 @@ export default function EventsPage() {
         </Link>
       </div>
 
+      {/* Tab Toggle */}
+      {!loading && events.length > 0 && (
+        <div className="mb-6 flex gap-1 rounded-xl bg-card-bg p-1">
+          <button
+            onClick={() => setTab("active")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === "active"
+                ? "bg-primary text-white"
+                : "text-muted hover:text-text-white"
+            }`}
+          >
+            Current & Upcoming
+          </button>
+          <button
+            onClick={() => setTab("past")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === "past"
+                ? "bg-primary text-white"
+                : "text-muted hover:text-text-white"
+            }`}
+          >
+            Past
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted" />
         </div>
       ) : events.length > 0 ? (
-        <div className="space-y-3">
-          {events.map((event) => (
+        <div className="space-y-4">
+          {events
+            .filter((e) =>
+              tab === "active"
+                ? e.status === "LIVE" || e.status === "UPCOMING"
+                : e.status === "COMPLETED"
+            )
+            .map((event) => (
             <Link key={event.id} href={`/dashboard/events/${event.id}/live`}>
               <Card className="group cursor-pointer transition-all hover:border-primary/30">
                 <div className="flex items-center justify-between">
@@ -107,6 +142,15 @@ export default function EventsPage() {
               </Card>
             </Link>
           ))}
+          {events.filter((e) =>
+            tab === "active"
+              ? e.status === "LIVE" || e.status === "UPCOMING"
+              : e.status === "COMPLETED"
+          ).length === 0 && (
+            <p className="py-8 text-center text-sm text-muted">
+              {tab === "active" ? "No upcoming or live events" : "No past events yet"}
+            </p>
+          )}
         </div>
       ) : (
         <Card className="text-center">
