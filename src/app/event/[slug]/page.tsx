@@ -215,9 +215,17 @@ export default function PublicEventPage() {
                 }}
                 className="flex w-full items-center gap-3 rounded-xl border border-border bg-card-bg p-3 text-left transition-all hover:border-primary/30"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg">
-                  <Music className="h-5 w-5 text-muted" />
-                </div>
+                {song.albumArtUrl ? (
+                  <img
+                    src={song.albumArtUrl}
+                    alt=""
+                    className="h-10 w-10 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-dark-bg">
+                    <Music className="h-5 w-5 text-muted" />
+                  </div>
+                )}
                 <div className="flex-1">
                   <p className="font-medium text-text-white">{song.title}</p>
                   <p className="text-sm text-muted">{song.originalArtist}</p>
@@ -255,9 +263,17 @@ export default function PublicEventPage() {
 
           <Card className="mb-6 border-primary/20">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Music className="h-6 w-6 text-primary" />
-              </div>
+              {selectedSong.albumArtUrl ? (
+                <img
+                  src={selectedSong.albumArtUrl}
+                  alt=""
+                  className="h-12 w-12 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <Music className="h-6 w-6 text-primary" />
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-text-white">{selectedSong.title}</p>
                 <p className="text-sm text-muted">{selectedSong.originalArtist}</p>
@@ -394,6 +410,7 @@ export default function PublicEventPage() {
                     id: nextUp.song.id,
                     title: nextUp.song.title,
                     originalArtist: nextUp.song.originalArtist,
+                    albumArtUrl: nextUp.song.albumArtUrl,
                   });
                   setView("tip");
                 }}
@@ -436,6 +453,7 @@ export default function PublicEventPage() {
                           id: item.song.id,
                           title: item.song.title,
                           originalArtist: item.song.originalArtist,
+                          albumArtUrl: item.song.albumArtUrl,
                         });
                         setView("tip");
                       }}
