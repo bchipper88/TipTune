@@ -342,27 +342,44 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <Card
-                key={feature.title}
-                className={`feature-card animate-on-scroll stagger-${i + 1} hover:border-primary/30`}
-              >
-                <div
-                  className={`mb-3 inline-flex rounded-xl p-2.5 ${
-                    i % 2 === 0
-                      ? "bg-gradient-to-br from-primary/20 to-secondary/20"
-                      : "bg-gradient-to-br from-warm/20 to-secondary/15"
-                  }`}
+          <div className="grid items-start gap-10 lg:grid-cols-[1fr_380px]">
+            {/* Feature Cards */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              {features.map((feature, i) => (
+                <Card
+                  key={feature.title}
+                  className={`feature-card animate-on-scroll stagger-${i + 1} hover:border-primary/30`}
                 >
-                  <feature.icon
-                    className={`h-5 w-5 ${i % 2 === 0 ? "text-primary" : "text-warm"}`}
-                  />
-                </div>
-                <h3 className="mb-1.5 font-semibold">{feature.title}</h3>
-                <p className="text-sm text-muted">{feature.description}</p>
-              </Card>
-            ))}
+                  <div
+                    className={`mb-3 inline-flex rounded-xl p-2.5 ${
+                      i % 2 === 0
+                        ? "bg-gradient-to-br from-primary/20 to-secondary/20"
+                        : "bg-gradient-to-br from-warm/20 to-secondary/15"
+                    }`}
+                  >
+                    <feature.icon
+                      className={`h-5 w-5 ${i % 2 === 0 ? "text-primary" : "text-warm"}`}
+                    />
+                  </div>
+                  <h3 className="mb-1.5 font-semibold">{feature.title}</h3>
+                  <p className="text-sm text-muted">{feature.description}</p>
+                </Card>
+              ))}
+            </div>
+
+            {/* Venue Photo */}
+            <div className="animate-on-scroll stagger-3 hidden lg:block">
+              <div className="sticky top-24 overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
+                <Image
+                  src="/venue.jpg"
+                  alt="Live performer engaging with crowd at a venue"
+                  width={760}
+                  height={1000}
+                  className="h-auto w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/60 via-transparent to-transparent" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
