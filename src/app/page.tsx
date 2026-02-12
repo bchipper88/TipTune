@@ -360,6 +360,30 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Stats */}
+          <div className="mb-12 grid gap-6 sm:grid-cols-3">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`stat-card ${stat.accent} animate-on-scroll stagger-${i + 1} rounded-2xl border border-border bg-card-bg/60 p-8 text-center backdrop-blur-sm`}
+              >
+                <p
+                  className={`mb-2 font-mono text-4xl font-black sm:text-5xl ${stat.color}`}
+                >
+                  {stat.countUp ? (
+                    <>
+                      <span data-countup={stat.value}>0</span>
+                      {stat.suffix}
+                    </>
+                  ) : (
+                    stat.value
+                  )}
+                </p>
+                <p className="text-muted">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
           {/* Venue Photo Banner */}
           <div className="animate-on-scroll mb-12 overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
             <div className="relative">
@@ -396,34 +420,6 @@ export default function LandingPage() {
                 <h3 className="mb-1.5 font-semibold">{feature.title}</h3>
                 <p className="text-sm text-muted">{feature.description}</p>
               </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="px-4 py-20">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-6 sm:grid-cols-3">
-            {stats.map((stat, i) => (
-              <div
-                key={stat.label}
-                className={`stat-card ${stat.accent} animate-on-scroll stagger-${i + 1} rounded-2xl border border-border bg-card-bg/60 p-8 text-center backdrop-blur-sm`}
-              >
-                <p
-                  className={`mb-2 font-mono text-4xl font-black sm:text-5xl ${stat.color}`}
-                >
-                  {stat.countUp ? (
-                    <>
-                      <span data-countup={stat.value}>0</span>
-                      {stat.suffix}
-                    </>
-                  ) : (
-                    stat.value
-                  )}
-                </p>
-                <p className="text-muted">{stat.label}</p>
-              </div>
             ))}
           </div>
         </div>
