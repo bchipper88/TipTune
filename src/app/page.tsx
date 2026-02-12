@@ -86,7 +86,7 @@ const features = [
 
 const stats = [
   { value: "90", label: "Songs Available", color: "text-primary", accent: "stat-card-primary", suffix: "M+", countUp: true },
-  { value: "$0", label: "To Get Started", color: "text-warm", accent: "stat-card-warm" },
+  { value: "$0", label: "To Get Started", color: "text-success", accent: "stat-card-warm" },
   { value: "60", label: "To Go Live", color: "text-secondary", accent: "stat-card-secondary", suffix: "s", countUp: true },
 ];
 
