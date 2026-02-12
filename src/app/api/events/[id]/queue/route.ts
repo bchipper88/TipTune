@@ -29,5 +29,19 @@ export async function GET(
     orderBy: { totalTips: "desc" },
   });
 
-  return NextResponse.json({ event, requests });
+  // Sum tips from ALL requests (including completed/skipped) for the event total
+  const allTips = await db.songRequest.aggregate({
+    where: { eventId },
+    _sum: { totalTips: true },
+    _count: true,
+  });
+
+  return NextResponse.json({
+    event,
+    requests,
+    eventTotals: {
+      totalTips: allTips._sum.totalTips ?? 0,
+      requestCount: allTips._count,
+    },
+  });
 }

@@ -45,6 +45,7 @@ export default function LiveEventPage() {
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [eventTotals, setEventTotals] = useState({ totalTips: 0, requestCount: 0 });
 
   const fetchData = useCallback(() => {
     fetch(`/api/events/${id}/queue`)
@@ -52,6 +53,7 @@ export default function LiveEventPage() {
       .then((data) => {
         if (data.event) setEvent(data.event);
         if (data.requests) setQueue(data.requests);
+        if (data.eventTotals) setEventTotals(data.eventTotals);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -101,7 +103,7 @@ export default function LiveEventPage() {
     setShowQR(!showQR);
   };
 
-  const totalEarnings = queue.reduce((sum, item) => sum + item.totalTips, 0);
+  const totalEarnings = eventTotals.totalTips;
   const queuedItems = queue.filter((q) => q.status === "QUEUED").sort((a, b) => b.totalTips - a.totalTips);
   const nextUp = queuedItems[0];
 
