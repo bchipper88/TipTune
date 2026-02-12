@@ -41,6 +41,7 @@ export default function LibraryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [libraryFilter, setLibraryFilter] = useState("");
 
   // Load existing songs from database on mount
   useEffect(() => {
@@ -370,29 +371,58 @@ export default function LibraryPage() {
         </Card>
       )}
 
+      {/* Library Search / Filter */}
+      {library.length > 3 && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted" />
+          <Input
+            placeholder="Search your library..."
+            className="pl-10"
+            value={libraryFilter}
+            onChange={(e) => setLibraryFilter(e.target.value)}
+          />
+          {libraryFilter && (
+            <button
+              onClick={() => setLibraryFilter("")}
+              className="absolute right-3 top-3 text-muted hover:text-text-white"
+              aria-label="Clear filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Library List */}
       {library.length > 0 ? (
         <div className="space-y-2">
-          {library.map((song, index) => (
+          {library
+            .map((song, index) => ({ song, originalIndex: index }))
+            .filter(({ song }) =>
+              !libraryFilter ||
+              song.title.toLowerCase().includes(libraryFilter.toLowerCase()) ||
+              song.originalArtist.toLowerCase().includes(libraryFilter.toLowerCase())
+            )
+            .map(({ song, originalIndex }) => (
             <div
-              key={song.id || index}
-              draggable
-              onDragStart={() => setDragIndex(index)}
+              key={song.id || originalIndex}
+              draggable={!libraryFilter}
+              onDragStart={() => !libraryFilter && setDragIndex(originalIndex)}
               onDragOver={(e) => {
                 e.preventDefault();
-                setDragOverIndex(index);
+                if (!libraryFilter) setDragOverIndex(originalIndex);
               }}
               onDragEnd={handleDragEnd}
               className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
-                dragOverIndex === index && dragIndex !== null && dragIndex !== index
+                dragOverIndex === originalIndex && dragIndex !== null && dragIndex !== originalIndex
                   ? "border-primary/50 bg-primary/5"
                   : "border-border bg-card-bg hover:border-border"
-              } ${dragIndex === index ? "opacity-50" : ""}`}
+              } ${dragIndex === originalIndex ? "opacity-50" : ""}`}
             >
-              <GripVertical className="h-4 w-4 flex-shrink-0 cursor-grab text-muted" />
+              {!libraryFilter && <GripVertical className="h-4 w-4 flex-shrink-0 cursor-grab text-muted" />}
 
               <span className="w-8 text-center font-mono text-sm text-muted">
-                {index + 1}
+                {originalIndex + 1}
               </span>
 
               {song.albumArtUrl ? (
@@ -426,6 +456,15 @@ export default function LibraryPage() {
               </button>
             </div>
           ))}
+          {libraryFilter && library.length > 0 && !library.some(
+            (s) =>
+              s.title.toLowerCase().includes(libraryFilter.toLowerCase()) ||
+              s.originalArtist.toLowerCase().includes(libraryFilter.toLowerCase())
+          ) && (
+            <p className="py-6 text-center text-sm text-muted">
+              No songs matching &ldquo;{libraryFilter}&rdquo;
+            </p>
+          )}
         </div>
       ) : (
         <Card className="text-center">
