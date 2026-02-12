@@ -25,6 +25,7 @@ const steps = [
     description:
       "Scan a QR code at the venue or search for a live event nearby — no app download needed.",
     step: 1,
+    image: "/steps/step-1-find.png",
   },
   {
     icon: Music,
@@ -32,6 +33,7 @@ const steps = [
     description:
       "Browse the artist's library, find the song you want to hear, and submit your request.",
     step: 2,
+    image: "/steps/step-2-pick.png",
   },
   {
     icon: DollarSign,
@@ -39,6 +41,7 @@ const steps = [
     description:
       "Attach a tip to your request. The song with the most money plays next. Want yours sooner? Tip more.",
     step: 3,
+    image: "/steps/step-3-tip.png",
   },
 ];
 
@@ -323,24 +326,40 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid gap-12 md:grid-cols-3 steps-connector">
-            {steps.map((item, i) => (
-              <div
-                key={item.step}
-                className={`animate-on-scroll stagger-${i + 1} relative z-10 text-center`}
-              >
-                {/* Step circle */}
-                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-2xl font-black text-white shadow-lg shadow-primary/20">
-                  {item.step}
+          <div className="relative mx-auto max-w-4xl">
+            {/* Vertical dashed connector line */}
+            <div className="absolute left-[160px] top-8 bottom-8 hidden w-px border-l border-dashed border-border/60 lg:block" />
+
+            <div className="space-y-16 lg:space-y-24">
+              {steps.map((item, i) => (
+                <div
+                  key={item.step}
+                  className={`animate-on-scroll stagger-${i + 1} flex flex-col items-center gap-8 lg:flex-row lg:gap-16`}
+                >
+                  {/* 3D Platform Image */}
+                  <div className="relative flex-shrink-0">
+                    <div className="relative h-[280px] w-[320px]">
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="text-center lg:text-left">
+                    <h3 className="mb-3 text-2xl font-bold text-text-white sm:text-3xl">
+                      {item.title}
+                    </h3>
+                    <p className="max-w-md text-lg text-muted">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-                {/* Icon */}
-                <div className="mx-auto mb-4 inline-flex rounded-2xl border border-border bg-card-bg p-4">
-                  <item.icon className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="mb-3 text-xl font-bold">{item.title}</h3>
-                <p className="mx-auto max-w-xs text-muted">{item.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
