@@ -127,7 +127,7 @@ export default function LandingPage() {
             if (prefersReducedMotion) {
               el.textContent = target.toString();
             } else {
-              const duration = 1500;
+              const duration = 3000;
               const start = performance.now();
               function tick(now: number) {
                 const elapsed = now - start;
