@@ -39,6 +39,8 @@ export default function LibraryPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Load existing songs from database on mount
   useEffect(() => {
@@ -159,6 +161,33 @@ export default function LibraryPage() {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
     return `${min}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const handleDragEnd = async () => {
+    if (dragIndex === null || dragOverIndex === null || dragIndex === dragOverIndex) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const reordered = [...library];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dragOverIndex, 0, moved);
+    setLibrary(reordered);
+    setDragIndex(null);
+    setDragOverIndex(null);
+
+    // Persist new order to the database
+    const songIds = reordered.map((s) => s.id).filter(Boolean) as string[];
+    try {
+      await fetch("/api/songs/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songIds }),
+      });
+    } catch {
+      console.error("Failed to save order");
+    }
   };
 
   return (
@@ -347,7 +376,18 @@ export default function LibraryPage() {
           {library.map((song, index) => (
             <div
               key={song.id || index}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card-bg p-3 transition-colors hover:border-border"
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverIndex(index);
+              }}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+                dragOverIndex === index && dragIndex !== null && dragIndex !== index
+                  ? "border-primary/50 bg-primary/5"
+                  : "border-border bg-card-bg hover:border-border"
+              } ${dragIndex === index ? "opacity-50" : ""}`}
             >
               <GripVertical className="h-4 w-4 flex-shrink-0 cursor-grab text-muted" />
 
