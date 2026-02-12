@@ -319,13 +319,6 @@ export default function LandingPage() {
       {/* How It Works */}
       <section className="section-gradient-blue px-4 py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="animate-on-scroll mb-16 text-center">
-            <h2 className="mb-4 text-3xl font-bold sm:text-4xl">How it works</h2>
-            <p className="text-lg text-muted">
-              Three steps to get the crowd involved
-            </p>
-          </div>
-
           <div className="relative mx-auto max-w-4xl">
             {/* Vertical dashed connector line */}
             <div className="absolute left-[160px] top-8 bottom-8 hidden w-px border-l border-dashed border-border/60 lg:block" />
