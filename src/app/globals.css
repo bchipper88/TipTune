@@ -247,6 +247,11 @@ body {
   box-shadow: 0 0 12px var(--color-secondary);
 }
 
+.stat-card-success::before {
+  background: linear-gradient(90deg, transparent, var(--color-success), transparent);
+  box-shadow: 0 0 12px var(--color-success);
+}
+
 /* How-it-works step connector line */
 @media (min-width: 768px) {
   .steps-connector {

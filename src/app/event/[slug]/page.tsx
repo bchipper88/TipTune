@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Flame,
   Crown,
+  Heart,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,13 +51,14 @@ const TIP_AMOUNTS = [
 
 export default function PublicEventPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [view, setView] = useState<"queue" | "browse" | "tip">("queue");
+  const [view, setView] = useState<"queue" | "browse" | "tip" | "general-tip">("queue");
   const [selectedSong, setSelectedSong] = useState<LibrarySong | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number>(500);
   const [customAmount, setCustomAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [tipSuccess, setTipSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [tipMessage, setTipMessage] = useState("");
 
   const [event, setEvent] = useState<EventData | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -124,6 +126,38 @@ export default function PublicEventPage() {
     }
   };
 
+  const handleGeneralTipSubmit = async () => {
+    if (!event) return;
+    const amount = customAmount ? parseInt(customAmount) * 100 : selectedAmount;
+    if (amount < 100) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/events/${event.id}/tip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipAmount: amount, message: tipMessage || undefined }),
+      });
+
+      if (res.ok) {
+        setTipSuccess(true);
+        setSelectedSong({ id: "", title: "General Tip", originalArtist: "", albumArtUrl: undefined });
+        setTimeout(() => {
+          setTipSuccess(false);
+          setView("queue");
+          setSelectedSong(null);
+          setCustomAmount("");
+          setTipMessage("");
+          fetchData();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Tip failed:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-dark-bg">
@@ -147,6 +181,8 @@ export default function PublicEventPage() {
     );
   }
 
+  const artistName = event.artistProfile.stageName;
+
   if (tipSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-dark-bg px-4">
@@ -156,16 +192,20 @@ export default function PublicEventPage() {
           </div>
           <h2 className="mb-2 text-2xl font-bold text-text-white">Tip Sent!</h2>
           <p className="text-muted">
-            Your tip for &ldquo;{selectedSong?.title}&rdquo; has been submitted.
-            <br />
-            Watch it climb the queue!
+            {selectedSong?.title === "General Tip" ? (
+              <>Your tip has been sent to {artistName}!</>
+            ) : (
+              <>
+                Your tip for &ldquo;{selectedSong?.title}&rdquo; has been submitted.
+                <br />
+                Watch it climb the queue!
+              </>
+            )}
           </p>
         </div>
       </div>
     );
   }
-
-  const artistName = event.artistProfile.stageName;
 
   // Browse Library View
   if (view === "browse") {
@@ -353,6 +393,105 @@ export default function PublicEventPage() {
     );
   }
 
+  // General Tip View (no song)
+  if (view === "general-tip") {
+    return (
+      <div className="min-h-screen bg-dark-bg">
+        <div className="mx-auto max-w-md px-4 pb-8 pt-4">
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              onClick={() => setView("queue")}
+              className="rounded-lg p-1.5 text-muted hover:text-text-white"
+              aria-label="Back to queue"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="font-bold">Send a Tip</h1>
+              <p className="text-sm text-muted">Show {artistName} some love</p>
+            </div>
+          </div>
+
+          <Card className="mb-6 border-warm/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warm/10">
+                <Heart className="h-6 w-6 text-warm" />
+              </div>
+              <div>
+                <p className="font-semibold text-text-white">Tip for {artistName}</p>
+                <p className="text-sm text-muted">No song request — just a tip</p>
+              </div>
+            </div>
+          </Card>
+
+          <div className="mb-4 grid grid-cols-3 gap-3">
+            {TIP_AMOUNTS.map((amount) => (
+              <button
+                key={amount.value}
+                onClick={() => {
+                  setSelectedAmount(amount.value);
+                  setCustomAmount("");
+                }}
+                className={`rounded-xl border-2 p-4 text-center font-mono text-lg font-bold transition-all ${
+                  selectedAmount === amount.value && !customAmount
+                    ? "border-warm bg-warm/10 text-warm"
+                    : "border-border bg-card-bg text-text-white hover:border-warm/50"
+                }`}
+              >
+                {amount.label}
+              </button>
+            ))}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-lg font-bold text-muted">
+                $
+              </span>
+              <input
+                type="number"
+                placeholder="Other"
+                min="1"
+                className="h-full w-full rounded-xl border-2 border-border bg-card-bg p-4 pl-8 text-center font-mono text-lg font-bold text-text-white placeholder:text-muted focus:border-warm focus:outline-none"
+                value={customAmount}
+                onChange={(e) => {
+                  setCustomAmount(e.target.value);
+                  setSelectedAmount(0);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <Input
+              placeholder="Add a message (optional)"
+              value={tipMessage}
+              onChange={(e) => setTipMessage(e.target.value)}
+            />
+          </div>
+
+          <Button
+            variant="warm"
+            size="lg"
+            className="w-full gap-2 text-lg"
+            onClick={handleGeneralTipSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Heart className="h-5 w-5" />
+            )}
+            {submitting
+              ? "Sending..."
+              : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
+          </Button>
+
+          <p className="mt-3 text-center text-xs text-muted">
+            Payments processed securely via Stripe
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Main Queue View
   return (
     <div className="min-h-screen bg-dark-bg">
@@ -489,15 +628,29 @@ export default function PublicEventPage() {
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-dark-bg/95 p-4 backdrop-blur-sm">
-          <div className="mx-auto max-w-md">
+          <div className="mx-auto flex max-w-md gap-3">
             <Button
               variant="primary"
               size="lg"
-              className="w-full gap-2 text-base"
+              className="flex-1 gap-2 text-base"
               onClick={() => setView("browse")}
             >
               <Music className="h-5 w-5" />
               Request a Song
+            </Button>
+            <Button
+              variant="warm"
+              size="lg"
+              className="gap-2 text-base"
+              onClick={() => {
+                setSelectedAmount(500);
+                setCustomAmount("");
+                setTipMessage("");
+                setView("general-tip");
+              }}
+            >
+              <Heart className="h-5 w-5" />
+              Tip
             </Button>
           </div>
         </div>
