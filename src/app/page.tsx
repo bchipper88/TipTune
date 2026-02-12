@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -17,7 +18,98 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+const steps = [
+  {
+    icon: QrCode,
+    title: "Scan the QR Code",
+    description:
+      "The artist displays a QR code at the venue. Scan it with your phone — no app download needed.",
+    step: 1,
+  },
+  {
+    icon: Music,
+    title: "Pick Your Song",
+    description:
+      "Browse the artist's library, find the song you want to hear, and submit your request.",
+    step: 2,
+  },
+  {
+    icon: DollarSign,
+    title: "Tip to Compete",
+    description:
+      "Attach a tip to your request. The song with the most money plays next. Want yours sooner? Tip more.",
+    step: 3,
+  },
+];
+
+const features = [
+  {
+    icon: Music,
+    title: "Song Library",
+    description:
+      "Build your library by searching millions of songs. Organize by genre, decade, or your preferred order.",
+  },
+  {
+    icon: QrCode,
+    title: "QR Codes",
+    description:
+      "Auto-generated QR codes for your profile and each event. Print them out, put them on tables.",
+  },
+  {
+    icon: DollarSign,
+    title: "Instant Payouts",
+    description:
+      "Get paid directly to your bank account via Stripe. See your earnings in real-time.",
+  },
+  {
+    icon: BarChart3,
+    title: "Live Dashboard",
+    description:
+      "See the queue in real-time. Accept, skip, or reorder songs. You stay in control.",
+  },
+  {
+    icon: Users,
+    title: "Build Your Audience",
+    description:
+      "Fans can follow you and get notified of your upcoming events. Grow your fanbase.",
+  },
+  {
+    icon: Zap,
+    title: "Zero Setup",
+    description:
+      "Create your account, add songs, create an event. You're live in minutes, not days.",
+  },
+];
+
+const stats = [
+  { value: "Millions", label: "Songs Available", color: "text-primary" },
+  { value: "$0", label: "To Get Started", color: "text-warm" },
+  { value: "60s", label: "To Go Live", color: "text-secondary" },
+];
+
 export default function LandingPage() {
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observerRef.current?.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    );
+
+    document.querySelectorAll(".animate-on-scroll").forEach((el) => {
+      observerRef.current?.observe(el);
+    });
+
+    return () => observerRef.current?.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* Navigation */}
@@ -48,32 +140,34 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 pb-16 pt-32 sm:pt-36">
-        {/* Subtle background accents */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-warm/5 blur-3xl" />
+        {/* Animated gradient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="hero-orb-1 absolute -left-40 -top-20 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px]" />
+          <div className="hero-orb-2 absolute -right-20 top-1/4 h-[400px] w-[400px] rounded-full bg-secondary/15 blur-[100px]" />
+          <div className="hero-orb-3 absolute bottom-0 left-1/3 h-[350px] w-[350px] rounded-full bg-warm/10 blur-[100px]" />
+          <div className="hero-orb-2 absolute left-1/2 top-1/3 h-[200px] w-[200px] rounded-full bg-primary/10 blur-[80px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-6xl">
           {/* Text Content */}
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card-bg/50 px-4 py-1.5 text-sm text-muted">
-              <Zap className="h-3.5 w-3.5 text-warm" />
+            <div className="hero-animate hero-animate-delay-1 mb-6 inline-flex items-center gap-2 rounded-full border border-warm/30 bg-warm/5 px-4 py-1.5 text-sm text-warm">
+              <Zap className="h-3.5 w-3.5" />
               Live song requests powered by tips
             </div>
 
-            <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="hero-animate hero-animate-delay-2 mb-6 text-5xl font-black leading-tight tracking-tight sm:text-6xl lg:text-7xl">
               Your tip decides{" "}
               <span className="gradient-text">what plays next</span>
             </h1>
 
-            <p className="mx-auto mb-10 max-w-2xl text-lg text-muted sm:text-xl">
+            <p className="hero-animate hero-animate-delay-3 mx-auto mb-10 max-w-2xl text-lg text-muted sm:text-xl">
               The live music request platform where audiences compete to hear
               their favorite song. Tip to boost your request up the queue —
               the highest bid plays next.
             </p>
 
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="hero-animate hero-animate-delay-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/register">
                 <Button variant="warm" size="lg" className="gap-2 text-base">
                   <Mic2 className="h-5 w-5" />
@@ -91,7 +185,7 @@ export default function LandingPage() {
           </div>
 
           {/* Banner Image + Queue Preview side by side */}
-          <div className="mx-auto mt-14 max-w-5xl">
+          <div className="hero-animate hero-animate-delay-4 mx-auto mt-14 max-w-5xl">
             <div className="grid items-stretch gap-6 lg:grid-cols-[1fr_340px]">
               {/* Banner Image */}
               <div className="overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-black/40">
@@ -177,61 +271,69 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Divider */}
+      <div className="section-divider mx-auto max-w-4xl" />
+
       {/* How It Works */}
-      <section className="px-4 py-24">
+      <section className="section-gradient-blue px-4 py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-16 text-center">
+          <div className="animate-on-scroll mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold sm:text-4xl">How it works</h2>
             <p className="text-lg text-muted">
               Three steps to get the crowd involved
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              {
-                icon: QrCode,
-                title: "Scan the QR Code",
-                description:
-                  "The artist displays a QR code at the venue. Scan it with your phone — no app download needed.",
-                step: "01",
-              },
-              {
-                icon: Music,
-                title: "Pick Your Song",
-                description:
-                  "Browse the artist's library, find the song you want to hear, and submit your request.",
-                step: "02",
-              },
-              {
-                icon: DollarSign,
-                title: "Tip to Compete",
-                description:
-                  "Attach a tip to your request. The song with the most money plays next. Want yours sooner? Tip more.",
-                step: "03",
-              },
-            ].map((item) => (
-              <Card key={item.step} className="relative overflow-hidden">
-                <span className="absolute -right-2 -top-4 font-mono text-7xl font-black text-border/30">
+          <div className="grid gap-12 md:grid-cols-3 steps-connector">
+            {steps.map((item, i) => (
+              <div
+                key={item.step}
+                className={`animate-on-scroll stagger-${i + 1} relative z-10 text-center`}
+              >
+                {/* Step circle */}
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-2xl font-black text-white shadow-lg shadow-primary/20">
                   {item.step}
-                </span>
-                <div className="relative z-10">
-                  <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3">
-                    <item.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="mb-2 text-xl font-bold">{item.title}</h3>
-                  <p className="text-muted">{item.description}</p>
                 </div>
-              </Card>
+                {/* Icon */}
+                <div className="mx-auto mb-4 inline-flex rounded-2xl border border-border bg-card-bg p-4">
+                  <item.icon className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="mb-3 text-xl font-bold">{item.title}</h3>
+                <p className="mx-auto max-w-xs text-muted">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="section-divider mx-auto max-w-4xl" />
+
+      {/* Stats Section */}
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-4xl">
+          <div className="grid gap-8 text-center sm:grid-cols-3">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`animate-on-scroll stagger-${i + 1}`}
+              >
+                <p
+                  className={`stat-number mb-2 font-mono text-4xl font-black sm:text-5xl ${stat.color}`}
+                >
+                  {stat.value}
+                </p>
+                <p className="text-muted">{stat.label}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* For Artists */}
-      <section className="px-4 py-24">
+      <section className="section-gradient-purple px-4 py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-16 text-center">
+          <div className="animate-on-scroll mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
               Built for performers
             </h2>
@@ -241,50 +343,21 @@ export default function LandingPage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: Music,
-                title: "Song Library",
-                description:
-                  "Build your library by searching millions of songs. Organize by genre, decade, or your preferred order.",
-              },
-              {
-                icon: QrCode,
-                title: "QR Codes",
-                description:
-                  "Auto-generated QR codes for your profile and each event. Print them out, put them on tables.",
-              },
-              {
-                icon: DollarSign,
-                title: "Instant Payouts",
-                description:
-                  "Get paid directly to your bank account via Stripe. See your earnings in real-time.",
-              },
-              {
-                icon: BarChart3,
-                title: "Live Dashboard",
-                description:
-                  "See the queue in real-time. Accept, skip, or reorder songs. You stay in control.",
-              },
-              {
-                icon: Users,
-                title: "Build Your Audience",
-                description:
-                  "Fans can follow you and get notified of your upcoming events. Grow your fanbase.",
-              },
-              {
-                icon: Zap,
-                title: "Zero Setup",
-                description:
-                  "Create your account, add songs, create an event. You're live in minutes, not days.",
-              },
-            ].map((feature) => (
+            {features.map((feature, i) => (
               <Card
                 key={feature.title}
-                className="transition-colors hover:border-primary/30"
+                className={`feature-card animate-on-scroll stagger-${i + 1} hover:border-primary/30`}
               >
-                <div className="mb-3 inline-flex rounded-xl bg-secondary/10 p-2.5">
-                  <feature.icon className="h-5 w-5 text-secondary" />
+                <div
+                  className={`mb-3 inline-flex rounded-xl p-2.5 ${
+                    i % 2 === 0
+                      ? "bg-gradient-to-br from-primary/20 to-secondary/20"
+                      : "bg-gradient-to-br from-warm/20 to-secondary/15"
+                  }`}
+                >
+                  <feature.icon
+                    className={`h-5 w-5 ${i % 2 === 0 ? "text-primary" : "text-warm"}`}
+                  />
                 </div>
                 <h3 className="mb-1.5 font-semibold">{feature.title}</h3>
                 <p className="text-sm text-muted">{feature.description}</p>
@@ -295,19 +368,21 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-24">
+      <section className="section-gradient-warm px-4 py-24">
         <div className="mx-auto max-w-3xl">
-          <Card className="relative overflow-hidden border-warm/20 text-center" glow="warm">
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute left-1/2 top-0 h-32 w-64 -translate-x-1/2 bg-warm/10 blur-3xl" />
+          <Card className="animate-on-scroll relative overflow-hidden border-warm/20 text-center" glow="warm">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="cta-bg-glow absolute left-1/2 top-1/2 h-64 w-96 -translate-x-1/2 -translate-y-1/2 bg-warm/15 blur-[80px]" />
+              <div className="absolute -left-20 top-0 h-40 w-40 bg-primary/10 blur-[60px]" />
+              <div className="absolute -right-20 bottom-0 h-40 w-40 bg-secondary/10 blur-[60px]" />
             </div>
-            <div className="relative z-10 py-8">
-              <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
+            <div className="relative z-10 py-12">
+              <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
                 Ready to let the crowd decide?
               </h2>
               <p className="mx-auto mb-8 max-w-xl text-lg text-muted">
-                Join hundreds of artists already using TipTune to engage their
-                audience and earn more from every gig.
+                Join artists already using TipTune to engage their audience and
+                earn more from every gig.
               </p>
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                 <Link href="/register">
@@ -328,7 +403,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-4 py-12">
+      <div className="section-divider mx-auto max-w-4xl" />
+      <footer className="px-4 py-12">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2">
