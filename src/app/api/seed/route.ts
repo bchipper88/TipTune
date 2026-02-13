@@ -7,14 +7,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Visit /api/seed to create the account, then delete this route in production
 export async function GET() {
   try {
-    const email = "admin@tiptune.com";
-    const password = "TipTune2026!";
+    const email = "admin@playthatjam.com";
+    const password = "PlayThatJam2026!";
 
     // Check if already seeded in Prisma
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({
-        message: "Admin account already exists. Login with admin@tiptune.com / TipTune2026!",
+        message: "Admin account already exists. Login with admin@playthatjam.com / PlayThatJam2026!",
       });
     }
 

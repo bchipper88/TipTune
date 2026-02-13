@@ -162,7 +162,7 @@ export default function LandingPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
                 <Music className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-text-white">TipTune</span>
+              <span className="text-xl font-bold text-text-white">PlayThatJam</span>
             </Link>
             <div className="flex items-center gap-3">
               <Link href="/login">
@@ -451,7 +451,7 @@ export default function LandingPage() {
                 Ready to let the crowd decide?
               </h2>
               <p className="mx-auto mb-8 max-w-xl text-lg text-muted">
-                Join artists already using TipTune to engage their audience and
+                Join artists already using PlayThatJam to engage their audience and
                 earn more from every gig.
               </p>
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -481,7 +481,7 @@ export default function LandingPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
                 <Music className="h-4 w-4 text-white" />
               </div>
-              <span className="text-lg font-bold text-text-white">TipTune</span>
+              <span className="text-lg font-bold text-text-white">PlayThatJam</span>
             </div>
             <div className="flex gap-6 text-sm text-muted">
               <Link href="/explore" className="transition-colors hover:text-text-white">
@@ -495,7 +495,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-sm text-muted">
-              &copy; {new Date().getFullYear()} TipTune
+              &copy; {new Date().getFullYear()} PlayThatJam
             </p>
           </div>
         </div>

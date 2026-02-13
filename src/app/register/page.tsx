@@ -83,7 +83,7 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
               <Music className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-text-white">TipTune</span>
+            <span className="text-2xl font-bold text-text-white">PlayThatJam</span>
           </Link>
           <h1 className="mt-4 text-2xl font-bold">Create your account</h1>
           <p className="mt-1 text-muted">Start taking requests in minutes</p>

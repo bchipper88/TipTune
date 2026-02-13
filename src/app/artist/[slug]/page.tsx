@@ -88,7 +88,7 @@ export default function ArtistProfilePage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
               <Music className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-text-white">TipTune</span>
+            <span className="text-sm font-bold text-text-white">PlayThatJam</span>
           </Link>
         </div>
 
