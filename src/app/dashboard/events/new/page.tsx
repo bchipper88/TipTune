@@ -50,7 +50,7 @@ function TimeSelector({
         <select
           value={hour}
           onChange={(e) => onHourChange(e.target.value)}
-          className="rounded-lg border border-border bg-card-bg px-2 py-2 text-sm text-text-white focus:border-primary focus:outline-none"
+          className="rounded-lg border border-border bg-card-bg px-3 py-2 text-sm text-text-white focus:border-primary focus:outline-none"
           required={required}
         >
           <option value="" disabled>
@@ -63,26 +63,24 @@ function TimeSelector({
           ))}
         </select>
         <span className="text-muted">:</span>
-        <div className="flex gap-1">
-          {MINUTE_PRESETS.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => onMinuteChange(m)}
-              className={`rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
-                minute === m
-                  ? "bg-primary text-white"
-                  : "border border-border bg-card-bg text-muted hover:text-text-white"
-              }`}
-            >
-              :{m}
-            </button>
-          ))}
-        </div>
+        {MINUTE_PRESETS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onMinuteChange(m)}
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              minute === m
+                ? "bg-primary text-white"
+                : "border border-border bg-card-bg text-muted hover:text-text-white"
+            }`}
+          >
+            :{m}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => onPeriodChange(period === "AM" ? "PM" : "AM")}
-          className="rounded-lg border border-border bg-card-bg px-2.5 py-2 text-sm font-medium text-text-white hover:border-primary transition-colors"
+          className="rounded-lg border border-border bg-card-bg px-3 py-2 text-sm font-medium text-text-white hover:border-primary transition-colors"
         >
           {period}
         </button>
@@ -206,7 +204,7 @@ export default function NewEventPage() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <TimeSelector
               label="Start Time"
               date={startDate}
