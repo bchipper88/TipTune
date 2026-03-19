@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 interface ShowSummary {
   totalTips: number;
   tipCount: number;
-  uniqueTippers: number;
   songsPlayed: number;
   songsSkipped: number;
   songsQueued: number;
@@ -98,9 +97,9 @@ export function EndShowSummaryModal({
               <div className="rounded-xl border border-border bg-card-bg p-4 text-center">
                 <Users className="mx-auto mb-1.5 h-5 w-5 text-primary" />
                 <p className="text-2xl font-bold text-text-white">
-                  {summary.uniqueTippers}
+                  {summary.tipCount}
                 </p>
-                <p className="text-xs text-muted">Tippers</p>
+                <p className="text-xs text-muted">Tips</p>
               </div>
               <div className="rounded-xl border border-border bg-card-bg p-4 text-center">
                 <Check className="mx-auto mb-1.5 h-5 w-5 text-success" />

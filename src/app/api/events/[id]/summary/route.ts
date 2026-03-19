@@ -35,17 +35,13 @@ export async function GET(
   // Compute stats from the requests
   let totalTips = 0;
   let tipCount = 0;
-  const tipperSet = new Set<string>();
   const statusCounts: Record<string, number> = {};
 
   for (const req of requests) {
     statusCounts[req.status] = (statusCounts[req.status] ?? 0) + 1;
     for (const tip of req.tips) {
-      if (tip.status === "COMPLETED") {
-        totalTips += tip.amount;
-        tipCount++;
-        if (tip.userId) tipperSet.add(tip.userId);
-      }
+      totalTips += tip.amount;
+      tipCount++;
     }
   }
 
@@ -58,7 +54,6 @@ export async function GET(
   return NextResponse.json({
     totalTips,
     tipCount,
-    uniqueTippers: tipperSet.size,
     songsPlayed: statusCounts["COMPLETED"] ?? 0,
     songsSkipped: statusCounts["SKIPPED"] ?? 0,
     songsQueued: statusCounts["QUEUED"] ?? 0,
