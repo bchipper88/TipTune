@@ -219,11 +219,20 @@ export default function LibraryPage() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted" />
               <Input
                 placeholder="Search by song title or artist..."
-                className="pl-10"
+                className="pl-10 pr-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-3 text-muted hover:text-text-white"
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <Button onClick={handleSearch} disabled={searching}>
               {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
