@@ -73,9 +73,12 @@ export default function ProfilePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ avatarUrl: data.url }),
         });
+      } else {
+        alert(data.error || "Upload failed. Please try again.");
       }
     } catch (err) {
       console.error("Avatar upload failed:", err);
+      alert("Upload failed. Please try again.");
     } finally {
       setUploadingAvatar(false);
     }
@@ -224,31 +227,31 @@ export default function ProfilePage() {
           <Card>
             <h2 className="mb-4 font-semibold">Profile Picture</h2>
             <div className="text-center">
-              <div className="relative mx-auto mb-3 h-24 w-24">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="group relative mx-auto mb-3 block h-24 w-24 cursor-pointer"
+              >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatarUrl}
                     alt="Profile"
-                    className="h-24 w-24 rounded-full object-cover"
+                    className="h-24 w-24 rounded-full object-cover transition-opacity group-hover:opacity-75"
                   />
                 ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary transition-opacity group-hover:opacity-75">
                     <User className="h-12 w-12 text-white" />
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card-bg bg-primary text-white transition-colors hover:bg-primary/80"
-                >
+                <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card-bg bg-primary text-white transition-colors group-hover:bg-primary/80">
                   {uploadingAvatar ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Camera className="h-4 w-4" />
                   )}
-                </button>
+                </span>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -256,7 +259,7 @@ export default function ProfilePage() {
                   className="hidden"
                   onChange={handleAvatarUpload}
                 />
-              </div>
+              </button>
               <p className="font-bold text-text-white">
                 {form.stageName || "Your Stage Name"}
               </p>
