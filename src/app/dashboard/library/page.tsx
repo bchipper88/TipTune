@@ -482,7 +482,7 @@ export default function LibraryPage() {
             <Button
               variant="primary"
               className="gap-2"
-              onClick={() => setShowSearch(true)}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               <Plus className="h-4 w-4" />
               Add Your First Song
