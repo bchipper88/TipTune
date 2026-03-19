@@ -101,6 +101,7 @@ model Event {
   status          EventStatus @default(UPCOMING)
   eventSlug       String      @unique @map("event_slug")
   description     String?
+  notes           String?
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 

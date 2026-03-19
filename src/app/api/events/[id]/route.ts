@@ -47,15 +47,20 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { status } = body;
+  const { status, name, notes } = body;
 
   if (status && !["UPCOMING", "LIVE", "COMPLETED"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  const data: Record<string, unknown> = {};
+  if (status) data.status = status;
+  if (typeof name === "string" && name.trim()) data.name = name.trim();
+  if (typeof notes === "string") data.notes = notes;
+
   const updated = await db.event.update({
     where: { id },
-    data: { ...(status && { status }) },
+    data,
   });
 
   return NextResponse.json(updated);

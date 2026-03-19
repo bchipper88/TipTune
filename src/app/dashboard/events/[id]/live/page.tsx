@@ -19,6 +19,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EndShowSummaryModal } from "@/components/EndShowSummaryModal";
 
 interface QueueItem {
   id: string;
@@ -46,6 +47,7 @@ export default function LiveEventPage() {
   const [showQR, setShowQR] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [eventTotals, setEventTotals] = useState({ totalTips: 0, requestCount: 0 });
+  const [showEndModal, setShowEndModal] = useState(false);
 
   const fetchData = useCallback(() => {
     fetch(`/api/events/${id}/queue`)
@@ -169,7 +171,7 @@ export default function LiveEventPage() {
             <Button
               variant="danger"
               className="gap-2"
-              onClick={() => updateEventStatus("COMPLETED")}
+              onClick={() => setShowEndModal(true)}
             >
               <Pause className="h-4 w-4" />
               End Event
@@ -322,6 +324,28 @@ export default function LiveEventPage() {
         </Card>
       ) : (
         <p className="py-4 text-center text-sm text-muted">No more songs in queue</p>
+      )}
+
+      {showEndModal && event && (
+        <EndShowSummaryModal
+          eventId={id}
+          eventName={event.name}
+          onClose={() => setShowEndModal(false)}
+          onConfirmEnd={async ({ name, notes }) => {
+            const res = await fetch(`/api/events/${id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "COMPLETED", name, notes }),
+            });
+            if (res.ok) {
+              const updated = await res.json();
+              setEvent((prev) =>
+                prev ? { ...prev, status: updated.status, name: updated.name } : prev
+              );
+              setShowEndModal(false);
+            }
+          }}
+        />
       )}
     </div>
   );
