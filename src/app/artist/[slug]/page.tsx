@@ -94,9 +94,18 @@ export default function ArtistProfilePage() {
 
         {/* Artist Header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
-            <Music className="h-12 w-12 text-white" />
-          </div>
+          {artist.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={artist.avatarUrl}
+              alt={artist.stageName}
+              className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
+            />
+          ) : (
+            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
+              <Music className="h-12 w-12 text-white" />
+            </div>
+          )}
           <h1 className="text-3xl font-bold">{artist.stageName}</h1>
           <div className="mt-2 flex flex-wrap justify-center gap-2">
             {artist.genres.map((genre) => (

@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
@@ -33,6 +33,18 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [artistInfo, setArtistInfo] = useState<{ stageName: string; avatarUrl: string | null } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setArtistInfo({ stageName: data.stageName, avatarUrl: data.avatarUrl });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -117,7 +129,26 @@ export default function DashboardLayout({
           ))}
         </nav>
 
-        <div className="absolute bottom-6 left-3 right-3">
+        <div className="absolute bottom-6 left-3 right-3 space-y-2">
+          {artistInfo && (
+            <div className="flex items-center gap-3 rounded-xl px-4 py-2.5">
+              {artistInfo.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={artistInfo.avatarUrl}
+                  alt={artistInfo.stageName}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
+                  <UserCircle className="h-4 w-4 text-white" />
+                </div>
+              )}
+              <span className="truncate text-sm font-medium text-text-white">
+                {artistInfo.stageName}
+              </span>
+            </div>
+          )}
           <button
             onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-card-bg hover:text-danger"

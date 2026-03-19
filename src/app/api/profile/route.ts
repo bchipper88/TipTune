@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
   }
 
   const body = await req.json();
-  const { stageName, bio, genres, socialLinks } = body;
+  const { stageName, bio, genres, socialLinks, avatarUrl } = body;
 
   const updated = await db.artistProfile.update({
     where: { id: profile.id },
@@ -44,6 +44,7 @@ export async function PUT(req: Request) {
       ...(bio !== undefined && { bio }),
       ...(genres !== undefined && { genres }),
       ...(socialLinks !== undefined && { socialLinks }),
+      ...(avatarUrl !== undefined && { avatarUrl }),
     },
   });
 

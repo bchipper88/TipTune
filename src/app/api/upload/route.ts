@@ -40,18 +40,20 @@ export async function POST(req: Request) {
     }
 
     const ext = file.name.split(".").pop() || "jpg";
+    const bucketParam = formData.get("bucket") as string | null;
+    const bucket = bucketParam === "avatars" ? "avatars" : "song-covers";
     const fileName = `${user.id}/${Date.now()}.${ext}`;
 
     const admin = createAdminClient();
 
     // Ensure the bucket exists (creates if missing)
     const { data: buckets } = await admin.storage.listBuckets();
-    if (!buckets?.some((b) => b.name === "song-covers")) {
-      await admin.storage.createBucket("song-covers", { public: true });
+    if (!buckets?.some((b) => b.name === bucket)) {
+      await admin.storage.createBucket(bucket, { public: true });
     }
 
     const { error: uploadError } = await admin.storage
-      .from("song-covers")
+      .from(bucket)
       .upload(fileName, file, {
         contentType: file.type,
         upsert: false,
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
 
     const {
       data: { publicUrl },
-    } = admin.storage.from("song-covers").getPublicUrl(fileName);
+    } = admin.storage.from(bucket).getPublicUrl(fileName);
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {

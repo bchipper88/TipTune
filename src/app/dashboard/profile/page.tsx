@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { User, Mic2, FileText, Link as LinkIcon, QrCode, Loader2, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { User, Mic2, FileText, Link as LinkIcon, QrCode, Loader2, Check, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -23,11 +23,14 @@ export default function ProfilePage() {
     twitter: "",
     website: "",
   });
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [profileSlug, setProfileSlug] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -45,11 +48,38 @@ export default function ProfilePage() {
             website: social.website || "",
           });
           setProfileSlug(data.profileSlug || "");
+          setAvatarUrl(data.avatarUrl || "");
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", "avatars");
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setAvatarUrl(data.url);
+        // Auto-save the avatar URL
+        await fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ avatarUrl: data.url }),
+        });
+      }
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -192,10 +222,40 @@ export default function ProfilePage() {
         {/* Preview & QR */}
         <div className="space-y-4">
           <Card>
-            <h2 className="mb-4 font-semibold">Profile Preview</h2>
+            <h2 className="mb-4 font-semibold">Profile Picture</h2>
             <div className="text-center">
-              <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
-                <User className="h-10 w-10 text-white" />
+              <div className="relative mx-auto mb-3 h-24 w-24">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt="Profile"
+                    className="h-24 w-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
+                    <User className="h-12 w-12 text-white" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card-bg bg-primary text-white transition-colors hover:bg-primary/80"
+                >
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
               </div>
               <p className="font-bold text-text-white">
                 {form.stageName || "Your Stage Name"}
