@@ -58,6 +58,10 @@ export default function ProfilePage() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image is too large. Please use a file under 2 MB.");
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const formData = new FormData();

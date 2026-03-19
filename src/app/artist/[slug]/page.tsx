@@ -41,6 +41,7 @@ export default function ArtistProfilePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([]);
   const [pastEvents, setPastEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAvatar, setShowAvatar] = useState(false);
 
   useEffect(() => {
     fetch(`/api/artists/${slug}`)
@@ -92,15 +93,32 @@ export default function ArtistProfilePage() {
           </Link>
         </div>
 
-        {/* Artist Header */}
-        <div className="mb-8 text-center">
-          {artist.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
+        {/* Avatar Lightbox */}
+        {showAvatar && artist.avatarUrl && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            onClick={() => setShowAvatar(false)}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={artist.avatarUrl}
               alt={artist.stageName}
-              className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
+              className="max-h-[80vh] max-w-[90vw] rounded-2xl object-contain"
             />
+          </div>
+        )}
+
+        {/* Artist Header */}
+        <div className="mb-8 text-center">
+          {artist.avatarUrl ? (
+            <button type="button" onClick={() => setShowAvatar(true)}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={artist.avatarUrl}
+                alt={artist.stageName}
+                className="mx-auto mb-4 h-24 w-24 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+              />
+            </button>
           ) : (
             <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
               <Music className="h-12 w-12 text-white" />
