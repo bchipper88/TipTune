@@ -31,7 +31,7 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+
   const [addingId, setAddingId] = useState<string | null>(null);
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
@@ -200,19 +200,10 @@ export default function LibraryPage() {
             {library.length} songs in your library
           </p>
         </div>
-        <Button
-          variant="primary"
-          className="gap-2"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          {showSearch ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showSearch ? "Close" : "Add Songs"}
-        </Button>
       </div>
 
       {/* Deezer Search Panel */}
-      {showSearch && (
-        <Card className="mb-8 border-primary/20">
+      <Card className="mb-8 border-primary/20">
           <h3 className="mb-4 font-semibold">Search for songs to add</h3>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -377,8 +368,10 @@ export default function LibraryPage() {
               </div>
             )}
           </div>
-        </Card>
-      )}
+      </Card>
+
+      {/* My Library heading */}
+      <h2 className="mb-4 text-lg font-semibold">My Library</h2>
 
       {/* Library Search / Filter */}
       {library.length > 3 && (
