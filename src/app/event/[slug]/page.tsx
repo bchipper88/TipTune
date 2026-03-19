@@ -545,11 +545,6 @@ export default function PublicEventPage() {
                     <p className="text-sm text-muted">{nextUp.song.originalArtist}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-mono text-2xl font-bold text-warm">
-                    {formatCents(nextUp.totalTips)}
-                  </p>
-                </div>
               </div>
               <button
                 onClick={() => {
@@ -579,7 +574,11 @@ export default function PublicEventPage() {
               {queue.slice(1).map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card-bg p-3"
+                  className={`flex items-center justify-between rounded-xl border p-3 ${
+                    index === 0
+                      ? "queue-first-glow border-primary/25 bg-primary/5"
+                      : "border-border bg-card-bg"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     {item.song.albumArtUrl ? (
@@ -599,9 +598,6 @@ export default function PublicEventPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-semibold text-muted">
-                      {formatCents(item.totalTips)}
-                    </span>
                     <button
                       onClick={() => {
                         setSelectedSong({

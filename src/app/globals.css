@@ -77,6 +77,16 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Subtle blue glow for first queue item */
+@keyframes pulse-glow-blue {
+  0%, 100% { box-shadow: 0 0 8px rgba(59, 108, 255, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(59, 108, 255, 0.3); }
+}
+
+.queue-first-glow {
+  animation: pulse-glow-blue 3s ease-in-out infinite;
+}
+
 /* Blur overlay for queue items */
 .queue-blur {
   filter: blur(4px);
@@ -301,6 +311,9 @@ body {
     transition: none;
   }
   .next-up-glow {
+    animation: none;
+  }
+  .queue-first-glow {
     animation: none;
   }
   .cta-bg-glow {
