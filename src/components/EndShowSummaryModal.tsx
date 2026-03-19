@@ -50,7 +50,10 @@ export function EndShowSummaryModal({
 
   useEffect(() => {
     fetch(`/api/events/${eventId}/summary`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load summary");
+        return res.json();
+      })
       .then(setSummary)
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -63,7 +66,7 @@ export function EndShowSummaryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
       <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-dark-bg p-6">
         <button
           onClick={onClose}
