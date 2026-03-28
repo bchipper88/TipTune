@@ -18,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { StripeProvider } from "@/components/StripeProvider";
+import { PaymentForm } from "@/components/PaymentForm";
 
 interface QueueItem {
   id: string;
@@ -38,6 +40,7 @@ interface EventData {
   name: string;
   status: string;
   eventSlug: string;
+  stripeConnected: boolean;
   artistProfile: { stageName: string; profileSlug: string };
 }
 
@@ -51,7 +54,7 @@ const TIP_AMOUNTS = [
 
 export default function PublicEventPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [view, setView] = useState<"queue" | "browse" | "tip" | "general-tip">("queue");
+  const [view, setView] = useState<"queue" | "browse" | "tip" | "general-tip" | "payment">("queue");
   const [selectedSong, setSelectedSong] = useState<LibrarySong | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number>(500);
   const [customAmount, setCustomAmount] = useState("");
@@ -59,6 +62,8 @@ export default function PublicEventPage() {
   const [tipSuccess, setTipSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [tipMessage, setTipMessage] = useState("");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const [event, setEvent] = useState<EventData | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -96,31 +101,40 @@ export default function PublicEventPage() {
 
   const nextUp = queue[0];
 
+  const getTipAmount = () => {
+    return customAmount ? parseInt(customAmount) * 100 : selectedAmount;
+  };
+
   const handleTipSubmit = async () => {
     if (!selectedSong || !event) return;
-    const amount = customAmount ? parseInt(customAmount) * 100 : selectedAmount;
+    const amount = getTipAmount();
     if (amount < 100) return;
 
     setSubmitting(true);
+    setPaymentError(null);
     try {
-      const res = await fetch(`/api/events/${event.id}/requests`, {
+      const res = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: selectedSong.id, tipAmount: amount }),
+        body: JSON.stringify({
+          eventId: event.id,
+          songId: selectedSong.id,
+          tipAmount: amount,
+        }),
       });
 
-      if (res.ok) {
-        setTipSuccess(true);
-        setTimeout(() => {
-          setTipSuccess(false);
-          setView("queue");
-          setSelectedSong(null);
-          setCustomAmount("");
-          fetchData();
-        }, 2000);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPaymentError(data.error || "Failed to create payment");
+        return;
       }
+
+      setClientSecret(data.clientSecret);
+      setView("payment");
     } catch (err) {
-      console.error("Tip failed:", err);
+      console.error("Payment intent creation failed:", err);
+      setPaymentError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -128,34 +142,55 @@ export default function PublicEventPage() {
 
   const handleGeneralTipSubmit = async () => {
     if (!event) return;
-    const amount = customAmount ? parseInt(customAmount) * 100 : selectedAmount;
+    const amount = getTipAmount();
     if (amount < 100) return;
 
     setSubmitting(true);
+    setPaymentError(null);
     try {
-      const res = await fetch(`/api/events/${event.id}/tip`, {
+      const res = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipAmount: amount, message: tipMessage || undefined }),
+        body: JSON.stringify({
+          eventId: event.id,
+          tipAmount: amount,
+          message: tipMessage || undefined,
+        }),
       });
 
-      if (res.ok) {
-        setTipSuccess(true);
-        setSelectedSong({ id: "", title: "General Tip", originalArtist: "", albumArtUrl: undefined });
-        setTimeout(() => {
-          setTipSuccess(false);
-          setView("queue");
-          setSelectedSong(null);
-          setCustomAmount("");
-          setTipMessage("");
-          fetchData();
-        }, 2000);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPaymentError(data.error || "Failed to create payment");
+        return;
       }
+
+      setClientSecret(data.clientSecret);
+      setSelectedSong({ id: "", title: "General Tip", originalArtist: "", albumArtUrl: undefined });
+      setView("payment");
     } catch (err) {
-      console.error("Tip failed:", err);
+      console.error("Payment intent creation failed:", err);
+      setPaymentError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setTipSuccess(true);
+    setClientSecret(null);
+    setTimeout(() => {
+      setTipSuccess(false);
+      setView("queue");
+      setSelectedSong(null);
+      setCustomAmount("");
+      setTipMessage("");
+      fetchData();
+    }, 2000);
+  };
+
+  const handlePaymentError = (message: string) => {
+    setPaymentError(message);
   };
 
   if (loading) {
@@ -201,6 +236,78 @@ export default function PublicEventPage() {
                 Watch it climb the queue!
               </>
             )}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment View — Stripe card form
+  if (view === "payment" && clientSecret) {
+    const amount = getTipAmount();
+    return (
+      <div className="min-h-screen bg-dark-bg">
+        <div className="mx-auto max-w-md px-4 pb-8 pt-4">
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              onClick={() => {
+                setView(selectedSong?.title === "General Tip" ? "general-tip" : "tip");
+                setClientSecret(null);
+                setPaymentError(null);
+              }}
+              className="rounded-lg p-1.5 text-muted hover:text-text-white"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="font-bold">Complete Payment</h1>
+              <p className="text-sm text-muted">Enter your card details</p>
+            </div>
+          </div>
+
+          <Card className="mb-6 border-warm/20">
+            <div className="flex items-center gap-3">
+              {selectedSong?.title === "General Tip" ? (
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warm/10">
+                  <Heart className="h-6 w-6 text-warm" />
+                </div>
+              ) : selectedSong?.albumArtUrl ? (
+                <img
+                  src={selectedSong.albumArtUrl}
+                  alt=""
+                  className="h-12 w-12 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <Music className="h-6 w-6 text-primary" />
+                </div>
+              )}
+              <div>
+                <p className="font-semibold text-text-white">
+                  {selectedSong?.title === "General Tip"
+                    ? `Tip for ${artistName}`
+                    : selectedSong?.title}
+                </p>
+                <p className="text-sm text-muted">
+                  {selectedSong?.title === "General Tip"
+                    ? "General tip"
+                    : selectedSong?.originalArtist}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <StripeProvider clientSecret={clientSecret}>
+            <PaymentForm
+              tipAmount={amount}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
+          </StripeProvider>
+
+          <p className="mt-3 text-center text-xs text-muted">
+            Payments processed securely via Stripe
           </p>
         </div>
       </div>
@@ -368,12 +475,18 @@ export default function PublicEventPage() {
             </div>
           )}
 
+          {paymentError && (
+            <div className="mb-4 rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
+              {paymentError}
+            </div>
+          )}
+
           <Button
             variant="warm"
             size="lg"
             className="w-full gap-2 text-lg"
             onClick={handleTipSubmit}
-            disabled={submitting}
+            disabled={submitting || !event.stripeConnected}
           >
             {submitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -382,7 +495,9 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Submitting..."
-              : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
+              : !event.stripeConnected
+                ? "Tips coming soon"
+                : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
@@ -467,12 +582,18 @@ export default function PublicEventPage() {
             />
           </div>
 
+          {paymentError && (
+            <div className="mb-4 rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
+              {paymentError}
+            </div>
+          )}
+
           <Button
             variant="warm"
             size="lg"
             className="w-full gap-2 text-lg"
             onClick={handleGeneralTipSubmit}
-            disabled={submitting}
+            disabled={submitting || !event.stripeConnected}
           >
             {submitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -481,7 +602,9 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Sending..."
-              : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
+              : !event.stripeConnected
+                ? "Tips coming soon"
+                : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">

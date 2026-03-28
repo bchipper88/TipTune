@@ -15,6 +15,7 @@ export async function GET(
           stageName: true,
           profileSlug: true,
           userId: true,
+          stripeAccountId: true,
         },
       },
     },
@@ -40,5 +41,14 @@ export async function GET(
     orderBy: { sortOrder: "asc" },
   });
 
-  return NextResponse.json({ event, requests, library });
+  // Add stripeConnected flag and remove stripeAccountId from response
+  const { artistProfile, ...eventData } = event;
+  const { stripeAccountId, ...profileData } = artistProfile;
+  const enrichedEvent = {
+    ...eventData,
+    stripeConnected: !!stripeAccountId,
+    artistProfile: profileData,
+  };
+
+  return NextResponse.json({ event: enrichedEvent, requests, library });
 }
