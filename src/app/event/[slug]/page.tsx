@@ -307,7 +307,7 @@ export default function PublicEventPage() {
           </StripeProvider>
 
           <p className="mt-3 text-center text-xs text-muted">
-            Payments processed securely via Stripe
+            $0.20 transaction fee &middot; Powered by Stripe
           </p>
         </div>
       </div>
@@ -501,7 +501,7 @@ export default function PublicEventPage() {
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
-            Payments processed securely via Stripe
+            $0.20 transaction fee &middot; Powered by Stripe
           </p>
         </div>
       </div>
@@ -608,7 +608,7 @@ export default function PublicEventPage() {
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
-            Payments processed securely via Stripe
+            $0.20 transaction fee &middot; Powered by Stripe
           </p>
         </div>
       </div>
