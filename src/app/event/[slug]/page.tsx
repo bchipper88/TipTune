@@ -443,11 +443,12 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Submitting..."
-              : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
+              : `Tip ${fmtCents(getTipAmount() + estimateFees(getTipAmount()).total)} for this song`}
           </Button>
 
           {(() => {
-            const f = estimateFees(getTipAmount());
+            const amt = getTipAmount();
+            const f = estimateFees(amt);
             return (
               <div className="mt-4 rounded-xl bg-card-bg/60 px-4 py-3">
                 <p className="mb-2 text-center text-sm font-medium text-muted">
@@ -460,6 +461,10 @@ export default function PublicEventPage() {
                 <div className="flex justify-between text-xs text-muted">
                   <span>Service fee</span>
                   <span>{fmtCents(f.platformFee)}</span>
+                </div>
+                <div className="mt-1.5 flex justify-between border-t border-border pt-1.5 text-xs font-medium text-text-white">
+                  <span>Total</span>
+                  <span>{fmtCents(amt + f.total)}</span>
                 </div>
               </div>
             );
@@ -563,11 +568,12 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Sending..."
-              : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
+              : `Send ${fmtCents(getTipAmount() + estimateFees(getTipAmount()).total)} Tip`}
           </Button>
 
           {(() => {
-            const f = estimateFees(getTipAmount());
+            const amt = getTipAmount();
+            const f = estimateFees(amt);
             return (
               <div className="mt-4 rounded-xl bg-card-bg/60 px-4 py-3">
                 <p className="mb-2 text-center text-sm font-medium text-muted">
@@ -580,6 +586,10 @@ export default function PublicEventPage() {
                 <div className="flex justify-between text-xs text-muted">
                   <span>Service fee</span>
                   <span>{fmtCents(f.platformFee)}</span>
+                </div>
+                <div className="mt-1.5 flex justify-between border-t border-border pt-1.5 text-xs font-medium text-text-white">
+                  <span>Total</span>
+                  <span>{fmtCents(amt + f.total)}</span>
                 </div>
               </div>
             );
