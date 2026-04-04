@@ -96,7 +96,6 @@ export async function POST(req: Request) {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       ui_mode: "embedded",
       mode: "payment",
-      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
