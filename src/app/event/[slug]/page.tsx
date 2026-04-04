@@ -18,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { StripeProvider } from "@/components/StripeProvider";
 import { PaymentForm } from "@/components/PaymentForm";
 
 interface QueueItem {
@@ -64,7 +63,6 @@ export default function PublicEventPage() {
   const [tipMessage, setTipMessage] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [fees, setFees] = useState<{ stripeFee: number; platformFee: number; totalFee: number } | null>(null);
 
   const [event, setEvent] = useState<EventData | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -120,7 +118,7 @@ export default function PublicEventPage() {
     setSubmitting(true);
     setPaymentError(null);
     try {
-      const res = await fetch("/api/stripe/create-payment-intent", {
+      const res = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,7 +136,6 @@ export default function PublicEventPage() {
       }
 
       setClientSecret(data.clientSecret);
-      setFees(data.fees);
       setView("payment");
     } catch (err) {
       console.error("Payment intent creation failed:", err);
@@ -156,7 +153,7 @@ export default function PublicEventPage() {
     setSubmitting(true);
     setPaymentError(null);
     try {
-      const res = await fetch("/api/stripe/create-payment-intent", {
+      const res = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -174,7 +171,6 @@ export default function PublicEventPage() {
       }
 
       setClientSecret(data.clientSecret);
-      setFees(data.fees);
       setSelectedSong({ id: "", title: "General Tip", originalArtist: "", albumArtUrl: undefined });
       setView("payment");
     } catch (err) {
@@ -183,23 +179,6 @@ export default function PublicEventPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handlePaymentSuccess = () => {
-    setTipSuccess(true);
-    setClientSecret(null);
-    setTimeout(() => {
-      setTipSuccess(false);
-      setView("queue");
-      setSelectedSong(null);
-      setCustomAmount("");
-      setTipMessage("");
-      fetchData();
-    }, 2000);
-  };
-
-  const handlePaymentError = (message: string) => {
-    setPaymentError(message);
   };
 
   if (loading) {
@@ -251,9 +230,8 @@ export default function PublicEventPage() {
     );
   }
 
-  // Payment View — Stripe card form
+  // Payment View — Stripe Embedded Checkout
   if (view === "payment" && clientSecret) {
-    const amount = getTipAmount();
     return (
       <div className="min-h-screen bg-dark-bg">
         <div className="mx-auto max-w-md px-4 pb-8 pt-4">
@@ -270,53 +248,12 @@ export default function PublicEventPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="font-bold">Complete Payment</h1>
-              <p className="text-sm text-muted">Enter your card details</p>
+              <h1 className="font-bold">Secure Checkout</h1>
+              <p className="text-sm text-muted">Powered by Stripe</p>
             </div>
           </div>
 
-          <Card className="mb-6 border-warm/20">
-            <div className="flex items-center gap-3">
-              {selectedSong?.title === "General Tip" ? (
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warm/10">
-                  <Heart className="h-6 w-6 text-warm" />
-                </div>
-              ) : selectedSong?.albumArtUrl ? (
-                <img
-                  src={selectedSong.albumArtUrl}
-                  alt=""
-                  className="h-12 w-12 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                  <Music className="h-6 w-6 text-primary" />
-                </div>
-              )}
-              <div>
-                <p className="font-semibold text-text-white">
-                  {selectedSong?.title === "General Tip"
-                    ? `Tip for ${artistName}`
-                    : selectedSong?.title}
-                </p>
-                <p className="text-sm text-muted">
-                  {selectedSong?.title === "General Tip"
-                    ? "General tip"
-                    : selectedSong?.originalArtist}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <StripeProvider clientSecret={clientSecret}>
-            <PaymentForm
-              tipAmount={amount}
-              stripeFee={fees?.stripeFee ?? 0}
-              platformFee={fees?.platformFee ?? 0}
-              totalFee={fees?.totalFee ?? 0}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-            />
-          </StripeProvider>
+          <PaymentForm clientSecret={clientSecret} />
         </div>
       </div>
     );
