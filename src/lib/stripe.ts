@@ -9,4 +9,12 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-export const TRANSACTION_FEE_CENTS = 20; // $0.20 flat fee per transaction
+export const PLATFORM_FEE_CENTS = 15; // $0.15 platform fee per transaction
+
+export function calculateFees(tipAmountCents: number) {
+  const stripeFee = Math.ceil(tipAmountCents * 0.029 + 30); // 2.9% + $0.30
+  const platformFee = PLATFORM_FEE_CENTS;
+  const totalFee = stripeFee + platformFee;
+  const chargeAmount = tipAmountCents + totalFee;
+  return { stripeFee, platformFee, totalFee, chargeAmount };
+}

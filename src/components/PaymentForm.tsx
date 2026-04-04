@@ -11,11 +11,21 @@ import { Loader2 } from "lucide-react";
 
 interface PaymentFormProps {
   tipAmount: number;
+  stripeFee: number;
+  platformFee: number;
+  totalFee: number;
   onSuccess: () => void;
   onError: (message: string) => void;
 }
 
-export function PaymentForm({ tipAmount, onSuccess, onError }: PaymentFormProps) {
+export function PaymentForm({
+  tipAmount,
+  stripeFee,
+  platformFee,
+  totalFee,
+  onSuccess,
+  onError,
+}: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -44,13 +54,8 @@ export function PaymentForm({ tipAmount, onSuccess, onError }: PaymentFormProps)
     }
   };
 
-  const totalCents = tipAmount + 20; // $0.20 transaction fee
-  const totalDollars = totalCents / 100;
-  const displayTotal = `$${totalDollars.toFixed(2)}`;
-
-  const tipDollars = tipAmount / 100;
-  const displayTip =
-    tipDollars % 1 === 0 ? `$${tipDollars}` : `$${tipDollars.toFixed(2)}`;
+  const totalCents = tipAmount + totalFee;
+  const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,15 +64,19 @@ export function PaymentForm({ tipAmount, onSuccess, onError }: PaymentFormProps)
       <div className="rounded-xl bg-card-bg p-3 text-sm">
         <div className="flex justify-between text-muted">
           <span>Tip</span>
-          <span>{displayTip}</span>
+          <span>{fmt(tipAmount)}</span>
         </div>
         <div className="flex justify-between text-muted">
-          <span>Transaction fee</span>
-          <span>$0.20</span>
+          <span>Processing fee</span>
+          <span>{fmt(stripeFee)}</span>
+        </div>
+        <div className="flex justify-between text-muted">
+          <span>Service fee</span>
+          <span>{fmt(platformFee)}</span>
         </div>
         <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold text-text-white">
           <span>Total</span>
-          <span>{displayTotal}</span>
+          <span>{fmt(totalCents)}</span>
         </div>
       </div>
 
@@ -87,7 +96,7 @@ export function PaymentForm({ tipAmount, onSuccess, onError }: PaymentFormProps)
             Processing...
           </>
         ) : (
-          `Pay ${displayTotal}`
+          `Pay ${fmt(totalCents)}`
         )}
       </Button>
     </form>

@@ -64,6 +64,7 @@ export default function PublicEventPage() {
   const [tipMessage, setTipMessage] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [fees, setFees] = useState<{ stripeFee: number; platformFee: number; totalFee: number } | null>(null);
 
   const [event, setEvent] = useState<EventData | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -105,6 +106,12 @@ export default function PublicEventPage() {
     return customAmount ? parseInt(customAmount) * 100 : selectedAmount;
   };
 
+  const estimateFee = (cents: number) => {
+    const stripeFee = Math.ceil(cents * 0.029 + 30);
+    const platformFee = 15;
+    return ((stripeFee + platformFee) / 100).toFixed(2);
+  };
+
   const handleTipSubmit = async () => {
     if (!selectedSong || !event) return;
     const amount = getTipAmount();
@@ -131,6 +138,7 @@ export default function PublicEventPage() {
       }
 
       setClientSecret(data.clientSecret);
+      setFees(data.fees);
       setView("payment");
     } catch (err) {
       console.error("Payment intent creation failed:", err);
@@ -166,6 +174,7 @@ export default function PublicEventPage() {
       }
 
       setClientSecret(data.clientSecret);
+      setFees(data.fees);
       setSelectedSong({ id: "", title: "General Tip", originalArtist: "", albumArtUrl: undefined });
       setView("payment");
     } catch (err) {
@@ -301,14 +310,13 @@ export default function PublicEventPage() {
           <StripeProvider clientSecret={clientSecret}>
             <PaymentForm
               tipAmount={amount}
+              stripeFee={fees?.stripeFee ?? 0}
+              platformFee={fees?.platformFee ?? 0}
+              totalFee={fees?.totalFee ?? 0}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
             />
           </StripeProvider>
-
-          <p className="mt-3 text-center text-xs text-muted">
-            $0.20 transaction fee &middot; Powered by Stripe
-          </p>
         </div>
       </div>
     );
@@ -486,7 +494,7 @@ export default function PublicEventPage() {
             size="lg"
             className="w-full gap-2 text-lg"
             onClick={handleTipSubmit}
-            disabled={submitting || !event.stripeConnected}
+            disabled={submitting}
           >
             {submitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -495,13 +503,11 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Submitting..."
-              : !event.stripeConnected
-                ? "Tips coming soon"
-                : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
+              : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
-            $0.20 transaction fee &middot; Powered by Stripe
+            +${estimateFee(getTipAmount())} fee &middot; Powered by Stripe
           </p>
         </div>
       </div>
@@ -593,7 +599,7 @@ export default function PublicEventPage() {
             size="lg"
             className="w-full gap-2 text-lg"
             onClick={handleGeneralTipSubmit}
-            disabled={submitting || !event.stripeConnected}
+            disabled={submitting}
           >
             {submitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -602,13 +608,11 @@ export default function PublicEventPage() {
             )}
             {submitting
               ? "Sending..."
-              : !event.stripeConnected
-                ? "Tips coming soon"
-                : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
+              : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
           </Button>
 
           <p className="mt-3 text-center text-xs text-muted">
-            $0.20 transaction fee &middot; Powered by Stripe
+            +${estimateFee(getTipAmount())} fee &middot; Powered by Stripe
           </p>
         </div>
       </div>

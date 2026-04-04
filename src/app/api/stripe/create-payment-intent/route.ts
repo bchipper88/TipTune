@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getStripe, TRANSACTION_FEE_CENTS } from "@/lib/stripe";
+import { getStripe, calculateFees } from "@/lib/stripe";
+import type Stripe from "stripe";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -32,18 +33,10 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!event.artistProfile.stripeAccountId) {
-    return NextResponse.json(
-      { error: "Artist has not connected Stripe yet" },
-      { status: 400 }
-    );
-  }
-
   // Determine the song — either a specific song or the "General Tip" pseudo-song
   let targetSongId = songId;
 
   if (!targetSongId) {
-    // General tip — find or create the pseudo-song
     let generalSong = await db.song.findFirst({
       where: {
         artistProfileId: event.artistProfileId,
@@ -86,23 +79,28 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Charge the user tipAmount + $0.20 transaction fee
-    // The artist receives the full tipAmount, platform keeps the $0.20
-    const chargeAmount = tipAmount + TRANSACTION_FEE_CENTS;
+    const { stripeFee, platformFee, totalFee, chargeAmount } = calculateFees(tipAmount);
+    const stripeAccountId = event.artistProfile.stripeAccountId;
 
-    const paymentIntent = await getStripe().paymentIntents.create({
+    // Build PaymentIntent params — with or without destination
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: chargeAmount,
       currency: "usd",
-      application_fee_amount: TRANSACTION_FEE_CENTS,
-      transfer_data: {
-        destination: event.artistProfile.stripeAccountId,
-      },
       metadata: {
         eventId,
         songRequestId: songRequest.id,
         songId: targetSongId,
+        ...(stripeAccountId ? {} : { needsTransfer: "true" }),
       },
-    });
+    };
+
+    if (stripeAccountId) {
+      // Artist has Stripe connected — destination charge
+      paymentIntentParams.application_fee_amount = totalFee;
+      paymentIntentParams.transfer_data = { destination: stripeAccountId };
+    }
+
+    const paymentIntent = await getStripe().paymentIntents.create(paymentIntentParams);
 
     // Create PENDING tip and optimistically increment totalTips
     const [tip] = await db.$transaction([
@@ -125,6 +123,7 @@ export async function POST(req: Request) {
       clientSecret: paymentIntent.client_secret,
       tipId: tip.id,
       requestId: songRequest.id,
+      fees: { stripeFee, platformFee, totalFee },
     });
   } catch (err) {
     console.error("Stripe PaymentIntent creation failed:", err);
