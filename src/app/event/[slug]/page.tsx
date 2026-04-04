@@ -257,21 +257,11 @@ export default function PublicEventPage() {
           </div>
 
           <div className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-card-bg/60 py-2.5">
-            <svg className="h-5 w-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-            <span className="text-sm text-muted">Secured by</span>
-            <svg className="h-5" viewBox="0 0 60 25" fill="none">
-              <path d="M60 12.5C60 5.6 55.8 0 50.6 0c-5.3 0-9.8 5.6-9.8 12.5S45.3 25 50.6 25C55.8 25 60 19.4 60 12.5zM53.6 12.5c0 4.6-1.3 7.4-3 7.4s-3-2.8-3-7.4 1.3-7.4 3-7.4 3 2.8 3 7.4z" fill="#6772E5"/>
-              <path d="M35.3 12.5c0-4.2 2-7.4 4.7-7.4 1.4 0 2.4.6 3.2 1.5l.2-1.2h3.5V24.3l-3.7.1v-5.8c-.7.7-1.7 1.2-3 1.2-2.8 0-4.9-3.2-4.9-7.3zm4 0c0 3.2 1 5 2.5 5 .9 0 1.7-.5 2.2-1.2V8.6c-.5-.7-1.3-1.2-2.2-1.2-1.5 0-2.5 1.8-2.5 5.1z" fill="#6772E5"/>
-              <path d="M33.4 1.1l-3.6.8v3.5h-2.3v3h2.3V15c0 3.4 1.7 5 5.6 5 .8 0 1.6-.1 2-.3v-3c-.3.1-.8.2-1.3.2-1.3 0-2.2-.5-2.2-2.2V8.4h3.5v-3h-3.5l-.5-4.3z" fill="#6772E5"/>
-              <path d="M22.4 4c-1.4 0-2.3.7-2.8 1.1l-.2-.8h-3.2v20.6l3.6-.8V19c.6.4 1.4.8 2.5.8 3.5 0 5.2-3 5.2-7.3 0-4.6-2.2-7.5-5.1-7.5zm-.8 11.5c-.8 0-1.4-.3-1.8-.7V8.6c.4-.5 1-1 1.9-1 1.6 0 2.5 1.9 2.5 4 0 2.9-1 4.9-2.6 4.9z" fill="#6772E5"/>
-              <path d="M12 4.2L8.4 5V8.7l3.6-.7V4.2z" fill="#6772E5"/>
-              <path d="M8.4 5.4h3.6v14.5H8.4V5.4z" fill="#6772E5"/>
-              <path d="M5 6.4L4.8 5.4H1.5v14.5h3.6V9.6c.9-1.1 2.3-1 2.7-.8V5.4C7.4 5.2 5.9 5 5 6.4z" fill="#6772E5"/>
-              <path d="M0 8.6L0 5.4h-3.5v14.5H0V8.6z" fill="#6772E5" transform="translate(3.5)"/>
-            </svg>
+            <span className="text-sm text-muted">Secured by <span className="font-semibold text-text-white">Stripe</span></span>
           </div>
 
           <div className="overflow-hidden rounded-2xl">
