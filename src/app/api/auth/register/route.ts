@@ -5,7 +5,7 @@ import { slugify } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
-    const { name, role, stageName } = await req.json();
+    const { name, role, stageName, avgTipsPerNight } = await req.json();
 
     // Verify the Supabase session server-side instead of trusting a client-provided ID
     const supabase = await createClient();
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
                 create: {
                   stageName,
                   profileSlug: slugify(stageName) + "-" + Math.random().toString(36).substring(2, 8),
+                  ...(avgTipsPerNight ? { avgTipsPerNight } : {}),
                 },
               },
             }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Music, Mail, Lock, User, Mic2, Eye, EyeOff } from "lucide-react";
+import { Music, Mail, Lock, User, Mic2, Eye, EyeOff, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     stageName: "",
+    avgTipsPerNight: "",
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,6 +53,7 @@ export default function RegisterPage() {
           name: form.name,
           role,
           stageName: form.stageName,
+          avgTipsPerNight: role === "ARTIST" ? form.avgTipsPerNight : undefined,
         }),
       });
 
@@ -139,18 +141,36 @@ export default function RegisterPage() {
             </div>
 
             {role === "ARTIST" && (
-              <div className="relative">
-                <Mic2 className="absolute left-3 top-3 h-4 w-4 text-muted" />
-                <Input
-                  id="stageName"
-                  type="text"
-                  placeholder="Stage name / Band name"
-                  className="pl-10"
-                  value={form.stageName}
-                  onChange={(e) => setForm({ ...form, stageName: e.target.value })}
-                  required
-                />
-              </div>
+              <>
+                <div className="relative">
+                  <Mic2 className="absolute left-3 top-3 h-4 w-4 text-muted" />
+                  <Input
+                    id="stageName"
+                    type="text"
+                    placeholder="Stage name / Band name"
+                    className="pl-10"
+                    value={form.stageName}
+                    onChange={(e) => setForm({ ...form, stageName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted" />
+                  <select
+                    value={form.avgTipsPerNight}
+                    onChange={(e) => setForm({ ...form, avgTipsPerNight: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-dark-bg py-2.5 pl-10 pr-3 text-sm text-text-white placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+                  >
+                    <option value="" disabled>How much do you make in tips per night?</option>
+                    <option value="0">I don&apos;t receive tips currently</option>
+                    <option value="1-25">$1 – $25</option>
+                    <option value="26-50">$26 – $50</option>
+                    <option value="51-100">$51 – $100</option>
+                    <option value="101-200">$101 – $200</option>
+                    <option value="200+">$200+</option>
+                  </select>
+                </div>
+              </>
             )}
 
             <div className="relative">

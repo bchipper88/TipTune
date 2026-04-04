@@ -58,6 +58,7 @@ model ArtistProfile {
   socialLinks     Json?    @map("social_links")
   profileSlug     String   @unique @map("profile_slug")
   avatarUrl       String?  @map("avatar_url")
+  avgTipsPerNight String?  @map("avg_tips_per_night")
   stripeAccountId String?  @map("stripe_account_id")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
