@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Music, Mail, Lock, User, Mic2, Eye, EyeOff, DollarSign } from "lucide-react";
+import { Music, Mail, Lock, User, Mic2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -154,21 +154,31 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted" />
-                  <select
-                    value={form.avgTipsPerNight}
-                    onChange={(e) => setForm({ ...form, avgTipsPerNight: e.target.value })}
-                    className="w-full rounded-lg border border-border bg-dark-bg py-2.5 pl-10 pr-3 text-sm text-text-white placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
-                  >
-                    <option value="" disabled>How much do you make in tips per night?</option>
-                    <option value="0">I don&apos;t receive tips currently</option>
-                    <option value="1-25">$1 – $25</option>
-                    <option value="26-50">$26 – $50</option>
-                    <option value="51-100">$51 – $100</option>
-                    <option value="101-200">$101 – $200</option>
-                    <option value="200+">$200+</option>
-                  </select>
+                <div>
+                  <p className="mb-2 text-sm text-muted">Avg. tips per night?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: "0", label: "None" },
+                      { value: "1-25", label: "$1–25" },
+                      { value: "26-50", label: "$26–50" },
+                      { value: "51-100", label: "$51–100" },
+                      { value: "101-200", label: "$101–200" },
+                      { value: "200+", label: "$200+" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setForm({ ...form, avgTipsPerNight: opt.value })}
+                        className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
+                          form.avgTipsPerNight === opt.value
+                            ? "bg-primary text-white"
+                            : "bg-dark-bg text-muted hover:text-text-white border border-border"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
