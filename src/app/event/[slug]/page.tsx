@@ -413,13 +413,7 @@ export default function PublicEventPage() {
 
           {nextUp && (
             <div className="mb-6 rounded-xl bg-card-bg p-3 text-center text-sm text-muted">
-              <p>
-                Current #1 is at{" "}
-                <span className="font-mono font-semibold text-warm">
-                  {formatCents(nextUp.totalTips)}
-                </span>
-              </p>
-              <p className="mt-1">Tip higher to get your song to #1!</p>
+              <p>Tip higher to get your song to #1!</p>
             </div>
           )}
 

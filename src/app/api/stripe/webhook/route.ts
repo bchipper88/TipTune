@@ -28,16 +28,21 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // Find tip by the checkout session ID
       const tip = await db.tip.findFirst({
         where: { stripePaymentIntentId: session.id },
       });
 
       if (tip && tip.status !== "COMPLETED") {
-        await db.tip.update({
-          where: { id: tip.id },
-          data: { status: "COMPLETED" },
-        });
+        await db.$transaction([
+          db.tip.update({
+            where: { id: tip.id },
+            data: { status: "COMPLETED" },
+          }),
+          db.songRequest.update({
+            where: { id: tip.requestId },
+            data: { totalTips: { increment: tip.amount } },
+          }),
+        ]);
       }
       break;
     }

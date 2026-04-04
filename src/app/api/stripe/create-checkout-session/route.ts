@@ -125,22 +125,16 @@ export async function POST(req: Request) {
 
     const session = await getStripe().checkout.sessions.create(sessionParams);
 
-    // Create PENDING tip and optimistically increment totalTips
-    const [tip] = await db.$transaction([
-      db.tip.create({
-        data: {
-          requestId: songRequest.id,
-          amount: tipAmount,
-          message,
-          status: "PENDING",
-          stripePaymentIntentId: session.id,
-        },
-      }),
-      db.songRequest.update({
-        where: { id: songRequest.id },
-        data: { totalTips: { increment: tipAmount } },
-      }),
-    ]);
+    // Create PENDING tip — totalTips incremented only after payment succeeds (via webhook)
+    const tip = await db.tip.create({
+      data: {
+        requestId: songRequest.id,
+        amount: tipAmount,
+        message,
+        status: "PENDING",
+        stripePaymentIntentId: session.id,
+      },
+    });
 
     return NextResponse.json({
       clientSecret: session.client_secret,
