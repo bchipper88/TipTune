@@ -104,11 +104,14 @@ export default function PublicEventPage() {
     return customAmount ? parseInt(customAmount) * 100 : selectedAmount;
   };
 
-  const estimateFee = (cents: number) => {
+  const estimateFees = (cents: number) => {
     const stripeFee = Math.ceil(cents * 0.029 + 30);
     const platformFee = 15;
-    return ((stripeFee + platformFee) / 100).toFixed(2);
+    const total = stripeFee + platformFee;
+    return { stripeFee, platformFee, total };
   };
+
+  const fmtCents = (c: number) => `$${(c / 100).toFixed(2)}`;
 
   const handleTipSubmit = async () => {
     if (!selectedSong || !event) return;
@@ -443,9 +446,24 @@ export default function PublicEventPage() {
               : `Tip ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} for this song`}
           </Button>
 
-          <p className="mt-3 text-center text-xs text-muted">
-            +${estimateFee(getTipAmount())} fee &middot; Powered by Stripe
-          </p>
+          {(() => {
+            const f = estimateFees(getTipAmount());
+            return (
+              <div className="mt-4 rounded-xl bg-card-bg/60 px-4 py-3">
+                <p className="mb-2 text-center text-sm font-medium text-muted">
+                  +{fmtCents(f.total)} fee
+                </p>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Stripe fee</span>
+                  <span>{fmtCents(f.stripeFee)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Service fee</span>
+                  <span>{fmtCents(f.platformFee)}</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
@@ -548,9 +566,24 @@ export default function PublicEventPage() {
               : `Send ${customAmount ? `$${customAmount}` : formatCents(selectedAmount)} Tip`}
           </Button>
 
-          <p className="mt-3 text-center text-xs text-muted">
-            +${estimateFee(getTipAmount())} fee &middot; Powered by Stripe
-          </p>
+          {(() => {
+            const f = estimateFees(getTipAmount());
+            return (
+              <div className="mt-4 rounded-xl bg-card-bg/60 px-4 py-3">
+                <p className="mb-2 text-center text-sm font-medium text-muted">
+                  +{fmtCents(f.total)} fee
+                </p>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Stripe fee</span>
+                  <span>{fmtCents(f.stripeFee)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Service fee</span>
+                  <span>{fmtCents(f.platformFee)}</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
