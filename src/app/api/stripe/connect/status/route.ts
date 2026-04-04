@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export async function GET() {
   const session = await auth();
@@ -18,7 +18,7 @@ export async function GET() {
   }
 
   try {
-    const account = await stripe.accounts.retrieve(profile.stripeAccountId);
+    const account = await getStripe().accounts.retrieve(profile.stripeAccountId);
 
     return NextResponse.json({
       connected: true,

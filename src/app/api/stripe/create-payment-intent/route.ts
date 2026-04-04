@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { stripe, TRANSACTION_FEE_CENTS } from "@/lib/stripe";
+import { getStripe, TRANSACTION_FEE_CENTS } from "@/lib/stripe";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     // The artist receives the full tipAmount, platform keeps the $0.20
     const chargeAmount = tipAmount + TRANSACTION_FEE_CENTS;
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: chargeAmount,
       currency: "usd",
       application_fee_amount: TRANSACTION_FEE_CENTS,

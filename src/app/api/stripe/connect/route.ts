@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 // POST — Create Express account + onboarding link
 export async function POST() {
@@ -28,7 +28,7 @@ export async function POST() {
   try {
     // Create a new Express account if one doesn't exist
     if (!stripeAccountId) {
-      const account = await stripe.accounts.create({
+      const account = await getStripe().accounts.create({
         type: "express",
         email: profile.user.email,
         metadata: { artistProfileId: profile.id },
@@ -46,7 +46,7 @@ export async function POST() {
     }
 
     // Create an account link for onboarding
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await getStripe().accountLinks.create({
       account: stripeAccountId,
       refresh_url: `${appUrl}/dashboard/earnings?stripe=refresh`,
       return_url: `${appUrl}/dashboard/earnings?stripe=success`,

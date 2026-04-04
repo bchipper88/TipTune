@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   DollarSign,
@@ -38,6 +38,20 @@ interface EarningsData {
 }
 
 export default function EarningsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted" />
+        </div>
+      }
+    >
+      <EarningsContent />
+    </Suspense>
+  );
+}
+
+function EarningsContent() {
   const searchParams = useSearchParams();
   const [connectStatus, setConnectStatus] = useState<ConnectStatus | null>(null);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
