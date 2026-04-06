@@ -26,7 +26,7 @@ export async function GET(
   }
 
   const requests = await db.songRequest.findMany({
-    where: { eventId: event.id, status: { in: ["QUEUED", "PLAYING"] } },
+    where: { eventId: event.id, status: { in: ["QUEUED", "PLAYING"] }, totalTips: { gt: 0 } },
     include: {
       song: {
         select: { id: true, title: true, originalArtist: true, albumArtUrl: true },
