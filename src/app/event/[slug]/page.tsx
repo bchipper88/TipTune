@@ -40,7 +40,7 @@ interface EventData {
   status: string;
   eventSlug: string;
   stripeConnected: boolean;
-  artistProfile: { stageName: string; profileSlug: string };
+  artistProfile: { stageName: string; profileSlug: string; venmoUsername?: string | null };
 }
 
 const TIP_AMOUNTS = [
@@ -473,6 +473,28 @@ export default function PublicEventPage() {
               </div>
             );
           })()}
+
+          {event.artistProfile.venmoUsername && (
+            <div className="mt-4 rounded-xl border border-border bg-card-bg/60 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-semibold text-text-white">Pay with Venmo</span>
+                <span className="rounded-full bg-[#3D95CE]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3D95CE]">
+                  No fees
+                </span>
+              </div>
+              <p className="mb-3 text-xs text-muted">
+                Tipping via Venmo skips Stripe fees, but your song will <span className="font-semibold text-text-white">not</span> be added to the queue.
+              </p>
+              <a
+                href={`https://venmo.com/${event.artistProfile.venmoUsername}?txn=pay&amount=${(getTipAmount() / 100).toFixed(2)}&note=${encodeURIComponent(`Tip for ${selectedSong.title}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D95CE] py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Open Venmo · {fmtCents(getTipAmount())}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -598,6 +620,28 @@ export default function PublicEventPage() {
               </div>
             );
           })()}
+
+          {event.artistProfile.venmoUsername && (
+            <div className="mt-4 rounded-xl border border-border bg-card-bg/60 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-semibold text-text-white">Pay with Venmo</span>
+                <span className="rounded-full bg-[#3D95CE]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3D95CE]">
+                  No fees
+                </span>
+              </div>
+              <p className="mb-3 text-xs text-muted">
+                Tipping via Venmo skips Stripe fees and goes directly to {artistName}. Venmo tips do <span className="font-semibold text-text-white">not</span> add a song to the queue.
+              </p>
+              <a
+                href={`https://venmo.com/${event.artistProfile.venmoUsername}?txn=pay&amount=${(getTipAmount() / 100).toFixed(2)}&note=${encodeURIComponent(tipMessage || `Tip for ${artistName}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D95CE] py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Open Venmo · {fmtCents(getTipAmount())}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     );

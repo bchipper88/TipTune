@@ -35,7 +35,12 @@ export async function PUT(req: Request) {
   }
 
   const body = await req.json();
-  const { stageName, bio, genres, socialLinks, avatarUrl } = body;
+  const { stageName, bio, genres, socialLinks, avatarUrl, venmoUsername } = body;
+
+  const cleanVenmo =
+    typeof venmoUsername === "string"
+      ? venmoUsername.trim().replace(/^@/, "") || null
+      : venmoUsername;
 
   const updated = await db.artistProfile.update({
     where: { id: profile.id },
@@ -45,6 +50,7 @@ export async function PUT(req: Request) {
       ...(genres !== undefined && { genres }),
       ...(socialLinks !== undefined && { socialLinks }),
       ...(avatarUrl !== undefined && { avatarUrl }),
+      ...(venmoUsername !== undefined && { venmoUsername: cleanVenmo }),
     },
   });
 

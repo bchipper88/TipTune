@@ -22,6 +22,7 @@ export default function ProfilePage() {
     facebook: "",
     twitter: "",
     website: "",
+    venmoUsername: "",
   });
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -46,6 +47,7 @@ export default function ProfilePage() {
             facebook: social.facebook || "",
             twitter: social.twitter || "",
             website: social.website || "",
+            venmoUsername: data.venmoUsername || "",
           });
           setProfileSlug(data.profileSlug || "");
           setAvatarUrl(data.avatarUrl || "");
@@ -105,6 +107,7 @@ export default function ProfilePage() {
             twitter: form.twitter || undefined,
             website: form.website || undefined,
           },
+          venmoUsername: form.venmoUsername.trim() || null,
         }),
       });
       if (res.ok) {
@@ -207,6 +210,23 @@ export default function ProfilePage() {
                   />
                 </div>
               ))}
+            </div>
+
+            <h2 className="mb-2 mt-8 font-semibold">Venmo</h2>
+            <p className="mb-3 text-xs text-muted">
+              Optional. Lets fans tip you directly on Venmo with no Stripe fees. Venmo tips will NOT add songs to your queue.
+            </p>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-muted">@</span>
+              <Input
+                id="venmoUsername"
+                placeholder="your-venmo-username"
+                className="pl-8"
+                value={form.venmoUsername}
+                onChange={(e) =>
+                  setForm({ ...form, venmoUsername: e.target.value.replace(/^@/, "") })
+                }
+              />
             </div>
 
             <Button

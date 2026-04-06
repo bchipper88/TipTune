@@ -16,6 +16,7 @@ export async function GET(
           profileSlug: true,
           userId: true,
           stripeAccountId: true,
+          venmoUsername: true,
         },
       },
     },
