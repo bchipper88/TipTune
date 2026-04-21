@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "build": "prisma db push && next build",
+    "build": "prisma db push && prisma db execute --file prisma/enable-rls.sql --schema prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "eslint"
   },
