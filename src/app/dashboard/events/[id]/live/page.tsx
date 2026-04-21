@@ -48,6 +48,17 @@ export default function LiveEventPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [eventTotals, setEventTotals] = useState({ totalTips: 0, requestCount: 0 });
   const [showEndModal, setShowEndModal] = useState(false);
+  const [stripeReady, setStripeReady] = useState<boolean | null>(null);
+  const [goLiveError, setGoLiveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stripe/connect/status")
+      .then((res) => res.json())
+      .then((data) => {
+        setStripeReady(Boolean(data.chargesEnabled && data.payoutsEnabled));
+      })
+      .catch(() => setStripeReady(false));
+  }, []);
 
   const fetchData = useCallback(() => {
     fetch(`/api/events/${id}/queue`)
@@ -68,6 +79,7 @@ export default function LiveEventPage() {
   }, [fetchData]);
 
   const updateEventStatus = async (status: "LIVE" | "COMPLETED") => {
+    setGoLiveError(null);
     const res = await fetch(`/api/events/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -76,6 +88,9 @@ export default function LiveEventPage() {
     if (res.ok) {
       const updated = await res.json();
       setEvent((prev) => prev ? { ...prev, status: updated.status } : prev);
+    } else {
+      const data = await res.json().catch(() => null);
+      setGoLiveError(data?.error || "Unable to update event");
     }
   };
 
@@ -162,6 +177,12 @@ export default function LiveEventPage() {
               variant="warm"
               className="gap-2"
               onClick={() => updateEventStatus("LIVE")}
+              disabled={stripeReady !== true}
+              title={
+                stripeReady === true
+                  ? undefined
+                  : "Connect Stripe to go live"
+              }
             >
               <Radio className="h-4 w-4" />
               Go Live
@@ -179,6 +200,30 @@ export default function LiveEventPage() {
           )}
         </div>
       </div>
+
+      {event.status === "UPCOMING" && stripeReady === false && (
+        <Card className="mb-6 border-warm/30 bg-warm/5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-semibold text-text-white">
+                Connect Stripe to go live
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Tips can&apos;t flow without a connected Stripe account. Set it up to start accepting tips from fans.
+              </p>
+            </div>
+            <Link href="/dashboard/earnings">
+              <Button variant="warm" size="sm">Connect Stripe</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      {goLiveError && (
+        <div className="mb-4 rounded-xl bg-red-500/10 p-3 text-sm text-red-400">
+          {goLiveError}
+        </div>
+      )}
 
       {/* QR Code */}
       {showQR && (

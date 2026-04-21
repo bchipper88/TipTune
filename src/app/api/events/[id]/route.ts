@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isArtistReadyForPayouts } from "@/lib/stripe";
 
 export async function GET(
   _req: Request,
@@ -35,7 +36,9 @@ export async function PUT(
 
   const event = await db.event.findUnique({
     where: { id },
-    include: { artistProfile: { select: { userId: true } } },
+    include: {
+      artistProfile: { select: { userId: true, stripeAccountId: true } },
+    },
   });
 
   if (!event) {
@@ -51,6 +54,21 @@ export async function PUT(
 
   if (status && !["UPCOMING", "LIVE", "COMPLETED"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  if (status === "LIVE" && event.status !== "LIVE") {
+    const readiness = await isArtistReadyForPayouts(
+      event.artistProfile.stripeAccountId
+    );
+    if (!readiness.ready) {
+      return NextResponse.json(
+        {
+          error: "Connect Stripe before going live",
+          reason: readiness.reason,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const data: Record<string, unknown> = {};

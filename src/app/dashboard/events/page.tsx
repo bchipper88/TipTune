@@ -22,6 +22,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"active" | "past">("active");
+  const [stripeReady, setStripeReady] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch("/api/events")
@@ -31,7 +32,13 @@ export default function EventsPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+    fetch("/api/stripe/connect/status")
+      .then((res) => res.json())
+      .then((data) => setStripeReady(Boolean(data.chargesEnabled && data.payoutsEnabled)))
+      .catch(() => setStripeReady(false));
   }, []);
+
+  const hasUpcomingEvent = events.some((e) => e.status === "UPCOMING");
 
   const statusBadge = (status: Event["status"]) => {
     switch (status) {
@@ -60,6 +67,24 @@ export default function EventsPage() {
           </Button>
         </Link>
       </div>
+
+      {stripeReady === false && hasUpcomingEvent && (
+        <Card className="mb-6 border-warm/30 bg-warm/5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-semibold text-text-white">
+                Connect Stripe to go live
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Your upcoming events can&apos;t accept tips until Stripe is connected.
+              </p>
+            </div>
+            <Link href="/dashboard/earnings">
+              <Button variant="warm" size="sm">Connect Stripe</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       {/* Tab Toggle */}
       {!loading && events.length > 0 && (
