@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
   MapPin,
   Calendar,
   Clock,
-  Music,
   Radio,
   Compass,
   Loader2,
@@ -56,11 +56,15 @@ export default function ExplorePage() {
       <div className="border-b border-border bg-dark-bg/95 backdrop-blur-sm">
         <div className="mx-auto max-w-2xl px-4 py-6">
           <div className="mb-2 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-                <Music className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-bold text-text-white">PlayThatJam</span>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/playthatjamlogo.png"
+                alt="PlayThatJam"
+                width={440}
+                height={340}
+                priority
+                className="h-10 w-auto"
+              />
             </Link>
             <Link href="/login">
               <Button variant="ghost" size="sm">

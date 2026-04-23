@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Music,
@@ -85,11 +86,14 @@ export default function ArtistProfilePage() {
       <div className="mx-auto max-w-2xl px-4 pb-12 pt-6">
         {/* Header */}
         <div className="mb-2">
-          <Link href="/" className="inline-flex items-center gap-1.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-              <Music className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="text-sm font-bold text-text-white">PlayThatJam</span>
+          <Link href="/" className="inline-flex items-center">
+            <Image
+              src="/playthatjamlogo.png"
+              alt="PlayThatJam"
+              width={440}
+              height={340}
+              className="h-8 w-auto"
+            />
           </Link>
         </div>
 

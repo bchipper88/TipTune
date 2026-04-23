@@ -3,18 +3,27 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// One-time seed endpoint to create an admin artist account
-// Visit /api/seed to create the account, then delete this route in production
+// One-time seed endpoint to create a demo artist account. Dev-only — gated
+// off in production so a public URL hit can't create accounts.
 export async function GET() {
+  if (process.env.NODE_ENV !== "development") {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   try {
     const email = "admin@playthatjam.com";
-    const password = "PlayThatJam2026!";
+    const password = process.env.SEED_ADMIN_PASSWORD;
+    if (!password) {
+      return NextResponse.json(
+        { error: "Set SEED_ADMIN_PASSWORD in .env.local to run the seed" },
+        { status: 400 }
+      );
+    }
 
-    // Check if already seeded in Prisma
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({
-        message: "Admin account already exists. Login with admin@playthatjam.com / PlayThatJam2026!",
+        message: `Demo account already exists for ${email}. Use the password from SEED_ADMIN_PASSWORD to log in.`,
       });
     }
 
@@ -79,7 +88,7 @@ export async function GET() {
           venueName: "The Blue Note",
           venueAddress: "123 Main St, Nashville, TN",
           startsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
-          status: "LIVE",
+          status: "UPCOMING",
           eventSlug: "friday-night-live-" + Math.random().toString(36).substring(2, 8),
           description: "Live covers every Friday night. Request your favorites!",
         },
@@ -87,10 +96,10 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      message: "Admin account created!",
-      login: { email, password },
+      message: "Demo account created.",
+      email,
       artistProfile: user.artistProfile?.profileSlug,
-      note: "10 sample songs and a live event have been created. Go to /login to sign in.",
+      note: "10 sample songs and an upcoming event created. Log in at /login with the password from SEED_ADMIN_PASSWORD, then connect Stripe and flip the event to LIVE.",
     });
   } catch (error) {
     console.error("Seed error:", error);

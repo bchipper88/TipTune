@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Music, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -46,11 +47,15 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/" className="mb-6 inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
-              <Music className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-text-white">PlayThatJam</span>
+          <Link href="/" className="mb-6 inline-flex items-center">
+            <Image
+              src="/playthatjamlogo.png"
+              alt="PlayThatJam"
+              width={440}
+              height={340}
+              priority
+              className="h-20 w-auto"
+            />
           </Link>
           <h1 className="mt-4 text-2xl font-bold">Welcome back</h1>
           <p className="mt-1 text-muted">Sign in to your account</p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Music,
@@ -652,11 +653,14 @@ export default function PublicEventPage() {
     <div className="min-h-screen bg-dark-bg">
       <div className="mx-auto max-w-md px-4 pb-24 pt-4">
         <div className="mb-6 text-center">
-          <Link href="/" className="mb-2 inline-flex items-center gap-1.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-              <Music className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="text-sm font-bold text-text-white">PlayThatJam</span>
+          <Link href="/" className="mb-2 inline-flex items-center">
+            <Image
+              src="/playthatjamlogo.png"
+              alt="PlayThatJam"
+              width={440}
+              height={340}
+              className="h-8 w-auto"
+            />
           </Link>
           <h1 className="text-xl font-bold">{event.name}</h1>
           <Link
