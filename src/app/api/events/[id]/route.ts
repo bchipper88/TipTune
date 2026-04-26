@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { isArtistReadyForPayouts } from "@/lib/stripe";
+import { broadcastToEvent } from "@/lib/realtime";
 
 export async function GET(
   _req: Request,
@@ -80,6 +81,10 @@ export async function PUT(
     where: { id },
     data,
   });
+
+  if (status && status !== event.status) {
+    await broadcastToEvent(id, "event_status", { status });
+  }
 
   return NextResponse.json(updated);
 }

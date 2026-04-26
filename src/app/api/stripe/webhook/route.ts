@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
+import { broadcastToEvent } from "@/lib/realtime";
 import type Stripe from "stripe";
 
 export async function POST(req: Request) {
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
 
       const tip = await db.tip.findFirst({
         where: { stripePaymentIntentId: session.id },
+        include: { request: { select: { eventId: true } } },
       });
 
       if (tip && tip.status !== "COMPLETED") {
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
             data: { totalTips: { increment: tip.amount } },
           }),
         ]);
+        await broadcastToEvent(tip.request.eventId, "queue_update");
       }
       break;
     }

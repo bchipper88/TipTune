@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { broadcastToEvent } from "@/lib/realtime";
 
 export async function PUT(
   req: Request,
@@ -41,6 +42,8 @@ export async function PUT(
       _count: { select: { tips: true } },
     },
   });
+
+  await broadcastToEvent(eventId, "queue_update");
 
   return NextResponse.json(updated);
 }

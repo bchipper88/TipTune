@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EndShowSummaryModal } from "@/components/EndShowSummaryModal";
+import { createClient } from "@/lib/supabase/client";
 
 interface QueueItem {
   id: string;
@@ -74,9 +75,21 @@ export default function LiveEventPage() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!id) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`event:${id}`)
+      .on("broadcast", { event: "queue_update" }, () => fetchData())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, fetchData]);
 
   const updateEventStatus = async (status: "LIVE" | "COMPLETED") => {
     setGoLiveError(null);

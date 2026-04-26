@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { PaymentForm } from "@/components/PaymentForm";
+import { createClient } from "@/lib/supabase/client";
 
 interface QueueItem {
   id: string;
@@ -84,9 +85,22 @@ export default function PublicEventPage() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!event?.id) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`event:${event.id}`)
+      .on("broadcast", { event: "queue_update" }, () => fetchData())
+      .on("broadcast", { event: "event_status" }, () => fetchData())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [event?.id, fetchData]);
 
   const filteredLibrary = library.filter(
     (s) =>
